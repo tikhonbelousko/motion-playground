@@ -105,11 +105,15 @@ export function UseMeasurePlaygroud() {
               borderRadius: "22px",
             }}
             transition={{
-              duration: 0.2,
-              ease: "easeOut",
+              type: "spring",
+              visualDuration: 0.15,
+              bounce: 0.12,
+              // duration: 2,
             }}
           >
-            <span className="truncate">Ask anything ⌘J, recipes /</span>
+            <motion.span className="truncate" layout="position">
+              Ask anything ⌘J, recipes /
+            </motion.span>
           </motion.div>
         </motion.div>
       </div>
