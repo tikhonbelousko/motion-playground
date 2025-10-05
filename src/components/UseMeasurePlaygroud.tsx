@@ -1,19 +1,18 @@
-import { motion, useSpring, type Transition } from "motion/react";
-import { useEffect, useState } from "react";
-import useMeasure from "react-use-measure";
-import { DancingBars } from "./DancingBars";
 import {
-  StopIcon,
   ChevronUpIcon,
   LanguageIcon,
   MagnifyingGlassIcon,
   MinusIcon,
-  ClipboardDocumentIcon,
+  SparklesIcon,
+  StopIcon,
 } from "@heroicons/react/16/solid";
-import { AudioSettingsIcon } from "./AudioSettingsIcon";
-import { SparklesIcon } from "@heroicons/react/16/solid";
+import { motion, useSpring, type Transition } from "motion/react";
+import { useEffect, useState } from "react";
+import useMeasure from "react-use-measure";
 import { twMerge } from "tailwind-merge";
+import { AudioSettingsIcon } from "./AudioSettingsIcon";
 import { CopyDocumentIcon } from "./CopyDocumentIcon";
+import { DancingBars } from "./DancingBars";
 
 const openSpring: Transition = {
   type: "spring",
