@@ -3,6 +3,7 @@ import {
   LanguageIcon,
   MagnifyingGlassIcon,
   MinusIcon,
+  SparklesIcon,
   StopIcon,
 } from "@heroicons/react/16/solid";
 import { motion, useSpring, type Transition } from "motion/react";
@@ -42,7 +43,7 @@ export function UseMeasurePlaygroud() {
 
   return (
     <div
-      className="w-screen h-screen bg-zinc-100 select-none"
+      className="w-screen h-screen bg-zinc-50 select-none"
       onClick={() => {
         if (openIndex === null) {
           return;
@@ -58,21 +59,33 @@ export function UseMeasurePlaygroud() {
               setOpenIndex(i => (i === 0 ? null : 0));
             }}
           />
-          {/* <div className="shrink-0 flex justify-center items-center px-4 pl-3 gap-1 h-11 text-white font-medium text-[14px] leading-5 bg-emerald-700 hover:bg-emerald-800 ring-[0.5px] ring-inset ring-black/10 shadow-lg rounded-[22px]">
-            <SparklesIcon className="size-4" /> Generate notes
-          </div> */}
           <motion.div
-            className="flex-1 h-11 bg-white ring-[0.5px] ring-black/20 shadow-lg rounded-[22px] text-sm text-zinc-400 px-4 flex flex-row items-center justify-start"
+            className="shrink-0 flex justify-center items-center px-4 pl-3 gap-1 h-11 text-white font-medium text-[14px] leading-5 bg-emerald-700 hover:bg-emerald-800 ring-[0.5px] ring-inset ring-black/10 shadow-lg shadow-emerald-950/20 rounded-[22px]"
             animate={{
               opacity: openIndex === 0 ? 0 : 1,
-              scale: openIndex === 0 ? 0.95 : 1,
+              scale: openIndex === 0 ? 0.9 : 1,
+              filter: openIndex === 0 ? "blur(8px)" : "blur(0px)",
             }}
             transition={{
               duration: 0.2,
               ease: "easeOut",
             }}
           >
-            Ask anything ⌘J, recipes /
+            <SparklesIcon className="size-4" /> Generate notes
+          </motion.div>
+          <motion.div
+            className="flex-1 h-11 bg-white ring-[0.5px] ring-black/20 shadow-lg rounded-[22px] text-sm text-zinc-400 px-4 flex flex-row items-center justify-start truncate"
+            animate={{
+              opacity: openIndex === 0 ? 0 : 1,
+              scale: openIndex === 0 ? 0.95 : 1,
+              filter: openIndex === 0 ? "blur(8px)" : "blur(0px)",
+            }}
+            transition={{
+              duration: 0.2,
+              ease: "easeOut",
+            }}
+          >
+            <span className="truncate">Ask anything ⌘J, recipes /</span>
           </motion.div>
         </div>
       </div>
@@ -133,11 +146,7 @@ function ExpandingPanel({
         ref={panelRef}
       ></div>
 
-      <div
-        ref={buttonRef}
-        className="relative shrink-0 w-[86px] h-11"
-        onClick={onClick}
-      >
+      <div ref={buttonRef} className="relative shrink-0 w-[86px] h-11">
         <motion.div
           className="absolute bg-white ring-[0.5px] ring-black/20 rounded-[22px] -bg-red-500/20 shadow-lg flex flex-col items-stretch overflow-hidden"
           style={{
@@ -214,7 +223,10 @@ function ExpandingPanel({
             transition={isOpen ? openSpring : closeSpring}
           >
             <div className="shrink-0 flex items-center justify-center">
-              <div className="h-8 w-[42px] rounded-full flex items-center justify-center hover:bg-zinc-100">
+              <div
+                className="h-8 w-[42px] rounded-full flex items-center justify-center hover:bg-zinc-100"
+                onClick={onClick}
+              >
                 <DancingBars />
               </div>
               <div className="size-8 flex items-center rounded-full justify-center hover:bg-zinc-100">
