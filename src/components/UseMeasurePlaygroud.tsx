@@ -12,6 +12,8 @@ import {
 } from "@heroicons/react/16/solid";
 import { AudioSettingsIcon } from "./AudioSettingsIcon";
 import { SparklesIcon } from "@heroicons/react/16/solid";
+import { twMerge } from "tailwind-merge";
+import { CopyDocumentIcon } from "./CopyDocumentIcon";
 
 const openSpring: Transition = {
   type: "spring",
@@ -165,7 +167,7 @@ function ExpandingPanel({
                   <MagnifyingGlassIcon className="size-4 text-gray-500" />
                 </div>
                 <div className="size-8 rounded-full hover:bg-gray-100 flex items-center justify-center">
-                  <ClipboardDocumentIcon className="size-4 text-gray-500" />
+                  <CopyDocumentIcon className="size-4 text-gray-500" />
                 </div>
                 <div className="size-8 rounded-full hover:bg-gray-100 flex items-center justify-center">
                   <MinusIcon className="size-4 text-gray-500" />
@@ -173,21 +175,35 @@ function ExpandingPanel({
               </div>
             </div>
             <div className="flex-1 overflow-y-auto border-b border-gray-200">
-              <div
-                className="flex-1 flex flex-col px-4 py-4 gap-1"
-                style={{ width: panelBounds.width ?? 0 }}
+              <motion.div
+                className="flex-1 flex flex-col px-4 py-4"
+                style={{ width: panelBounds.width }}
               >
-                {MESSAGES.map(message =>
-                  message.isUser ? (
-                    <UserMessage key={message.id} message={message.message} />
+                {MESSAGES.map((message, index) => {
+                  const prevMessage = index > 0 ? MESSAGES[index - 1] : null;
+                  const shouldHaveLargeGap =
+                    prevMessage && prevMessage.isUser !== message.isUser;
+                  const gapClass = shouldHaveLargeGap
+                    ? "mt-4"
+                    : index > 0
+                    ? "mt-1"
+                    : "";
+
+                  return message.isUser ? (
+                    <UserMessage
+                      key={message.id}
+                      message={message.message}
+                      className={gapClass}
+                    />
                   ) : (
                     <PariticipantMessage
                       key={message.id}
                       message={message.message}
+                      className={gapClass}
                     />
-                  )
-                )}
-              </div>
+                  );
+                })}
+              </motion.div>
             </div>
           </motion.div>
 
@@ -383,17 +399,39 @@ const MESSAGES = [
   },
 ];
 
-function UserMessage({ message }: { message: string }) {
+function UserMessage({
+  message,
+  className = "",
+}: {
+  message: string;
+  className?: string;
+}) {
   return (
-    <div className="flex items-center justify-center px-3 py-1.5 rounded-2xl rounded-br text-sm text-emerald-900 bg-emerald-700/20 max-w-[calc(100%-64px)] self-end">
+    <div
+      className={twMerge(
+        "flex items-center justify-center px-3 py-1.5 rounded-2xl rounded-br text-sm text-emerald-900 bg-emerald-700/20 max-w-[calc(100%-64px)] self-end",
+        className
+      )}
+    >
       {message}
     </div>
   );
 }
 
-function PariticipantMessage({ message }: { message: string }) {
+function PariticipantMessage({
+  message,
+  className = "",
+}: {
+  message: string;
+  className?: string;
+}) {
   return (
-    <div className="flex items-center justify-center px-3 py-1.5 rounded-2xl rounded-bl text-sm text-gray-900 bg-gray-100 max-w-[calc(100%-64px)] self-start">
+    <div
+      className={twMerge(
+        "flex items-center justify-center px-3 py-1.5 rounded-2xl rounded-bl text-sm text-gray-900 bg-gray-100 max-w-[calc(100%-64px)] self-start",
+        className
+      )}
+    >
       {message}
     </div>
   );
