@@ -104,6 +104,8 @@ function ExpandingPanel({
   const [panelRef, panelBounds] = useMeasure();
   const [buttonRef, buttonBounds] = useMeasure();
 
+  const [isInitialRender, setIsInitialRender] = useState(true);
+
   const width = useSpring(0, isOpen ? openWidthSpring : closeSpring);
   const height = useSpring(0, isOpen ? openSpring : closeSpring);
   const left = useSpring(0, isOpen ? openSpring : closeSpring);
@@ -123,6 +125,10 @@ function ExpandingPanel({
   }, [isOpen]);
 
   useEffect(() => {
+    if (isInitialRender) {
+      setIsInitialRender(false);
+    }
+
     width.jump(isOpen ? panelBounds.width : buttonBounds.width ?? 0);
     height.jump(isOpen ? panelBounds.height : buttonBounds.height ?? 0);
 
@@ -178,10 +184,10 @@ function ExpandingPanel({
         </div>
 
         <motion.div
-          className="absolute bg-white ring-[0.5px] ring-black/20 rounded-[22px] -bg-red-500/20 shadow-lg flex flex-col items-stretch overflow-hidden"
+          className="absolute bg-white w-full h-full ring-[0.5px] ring-black/20 rounded-[22px] -bg-red-500/20 shadow-lg flex flex-col items-stretch overflow-hidden"
           style={{
-            width: width,
-            height: height,
+            width: isInitialRender ? "100%" : width,
+            height: isInitialRender ? "100%" : height,
             left: left,
             bottom: bottom,
             zIndex: isOpen ? 10 : 10,
@@ -253,7 +259,7 @@ function ExpandingPanel({
             transition={isOpen ? openSpring : closeSpring}
           >
             <motion.div
-              className="flex items-center justify-between"
+              className="flex items-center justify-between opacity-0"
               animate={{
                 opacity: isOpen ? 1 : 0,
               }}
