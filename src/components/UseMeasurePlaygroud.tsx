@@ -39,7 +39,7 @@ const closeSpring: Transition = {
 };
 
 export function UseMeasurePlaygroud() {
-  const [openIndex, setOpenIndex] = useState<number | null>(0);
+  const [openIndex, setOpenIndex] = useState<number | null>(null);
 
   return (
     <div
@@ -78,8 +78,6 @@ function ExpandingPanel({
   isOpen: boolean;
   onClick: () => void;
 }) {
-  // const [panelRef, panelBounds] = useMeasure({ debounce: isOpen ? 0 : 100 });
-  // const [buttonRef, buttonBounds] = useMeasure({ debounce: isOpen ? 0 : 100 });
   const [panelRef, panelBounds] = useMeasure();
   const [buttonRef, buttonBounds] = useMeasure();
 
