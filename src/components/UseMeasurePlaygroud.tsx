@@ -43,7 +43,7 @@ export function UseMeasurePlaygroud() {
 
   return (
     <div
-      className="w-screen h-screen bg-gray-100 select-none"
+      className="w-screen h-screen bg-zinc-100 select-none"
       onClick={() => {
         if (openIndex === null) {
           return;
@@ -62,13 +62,9 @@ export function UseMeasurePlaygroud() {
           <div className="shrink-0 flex justify-center items-center px-4 pl-3 gap-1 h-11 text-white font-medium text-[14px] leading-5 bg-emerald-700 hover:bg-emerald-800 ring-[0.5px] ring-inset ring-black/10 shadow-lg rounded-[22px]">
             <SparklesIcon className="size-4" /> Generate notes
           </div>
-          <div className="flex-1 w-20 h-11 bg-white ring-[0.5px] ring-black/20 shadow-lg rounded-[22px]"></div>
-          {/* <ExpandingPanel
-            isOpen={openIndex === 1}
-            onClick={() => {
-              setOpenIndex(i => (i === 1 ? null : 1));
-            }}
-          /> */}
+          <div className="flex-1 h-11 bg-white ring-[0.5px] ring-black/20 shadow-lg rounded-[22px] text-sm text-zinc-400 px-4 flex flex-row items-center justify-start">
+            Ask anything ⌘J, recipes /
+          </div>
         </div>
       </div>
     </div>
@@ -159,21 +155,21 @@ function ExpandingPanel({
                 : { duration: 0.1, ease: "easeOut" }
             }
           >
-            <div className="shrink-0 h-12 flex items-center justify-between px-4 pr-2 -bg-red-500 text-[13px] leading-5 font-semibold border-b border-gray-200">
+            <div className="shrink-0 h-12 flex items-center justify-between px-4 pr-2 -bg-red-500 text-[13px] leading-5 font-semibold border-b border-zinc-200">
               <div>Transcription</div>
               <div className="flex items-center">
-                <div className="size-8 rounded-full hover:bg-gray-100 flex items-center justify-center">
-                  <MagnifyingGlassIcon className="size-4 text-gray-500" />
+                <div className="size-8 rounded-full hover:bg-zinc-100 flex items-center justify-center">
+                  <MagnifyingGlassIcon className="size-4 text-zinc-500" />
                 </div>
-                <div className="size-8 rounded-full hover:bg-gray-100 flex items-center justify-center">
-                  <CopyDocumentIcon className="size-4 text-gray-500" />
+                <div className="size-8 rounded-full hover:bg-zinc-100 flex items-center justify-center">
+                  <CopyDocumentIcon className="size-4 text-zinc-500" />
                 </div>
-                <div className="size-8 rounded-full hover:bg-gray-100 flex items-center justify-center">
-                  <MinusIcon className="size-4 text-gray-500" />
+                <div className="size-8 rounded-full hover:bg-zinc-100 flex items-center justify-center">
+                  <MinusIcon className="size-4 text-zinc-500" />
                 </div>
               </div>
             </div>
-            <div className="flex-1 overflow-y-auto border-b border-gray-200">
+            <div className="flex-1 overflow-y-auto border-b border-zinc-200">
               <motion.div
                 className="flex-1 flex flex-col px-4 py-4"
                 style={{ width: panelBounds.width }}
@@ -214,11 +210,11 @@ function ExpandingPanel({
             transition={isOpen ? openSpring : closeSpring}
           >
             <div className="shrink-0 flex items-center justify-center">
-              <div className="h-8 w-[42px] rounded-full flex items-center justify-center hover:bg-gray-100">
+              <div className="h-8 w-[42px] rounded-full flex items-center justify-center hover:bg-zinc-100">
                 <DancingBars />
               </div>
-              <div className="size-8 flex items-center rounded-full justify-center hover:bg-gray-100">
-                <StopIcon className="size-4 text-gray-500" />
+              <div className="size-8 flex items-center rounded-full justify-center hover:bg-zinc-100">
+                <StopIcon className="size-4 text-zinc-500" />
               </div>
             </div>
 
@@ -233,18 +229,18 @@ function ExpandingPanel({
                   : { duration: 0.1, ease: "easeOut" }
               }
             >
-              <div className="flex items-center gap-0.5 p-2 pl-2.5 rounded-full hover:bg-gray-100">
-                <AudioSettingsIcon className="size-4 text-gray-500" />
-                <ChevronUpIcon className="size-3 text-gray-500" />
+              <div className="flex items-center gap-0.5 p-2 pl-2.5 rounded-full hover:bg-zinc-100">
+                <AudioSettingsIcon className="size-4 text-zinc-500" />
+                <ChevronUpIcon className="size-3 text-zinc-500" />
               </div>
-              <div className="flex items-center gap-0.5 pr-2 py-1.5 pl-2.5 rounded-full text-gray-500 hover:bg-gray-100">
+              <div className="flex items-center gap-0.5 pr-2 py-1.5 pl-2.5 rounded-full text-zinc-500 hover:bg-zinc-100">
                 <div className="flex items-center gap-1">
-                  <LanguageIcon className="size-4 text-gray-500" />
+                  <LanguageIcon className="size-4 text-zinc-500" />
                   <span className="text-[13px] leading-5 font-medium ">
                     English
                   </span>
                 </div>
-                <ChevronUpIcon className="size-3 text-gray-500" />
+                <ChevronUpIcon className="size-3 text-zinc-500" />
               </div>
             </motion.div>
           </motion.div>
@@ -427,7 +423,7 @@ function PariticipantMessage({
   return (
     <div
       className={twMerge(
-        "flex items-center justify-center px-3 py-1.5 rounded-2xl rounded-bl text-sm text-gray-900 bg-gray-100 max-w-[calc(100%-64px)] self-start",
+        "flex items-center justify-center px-3 py-1.5 rounded-2xl rounded-bl text-sm text-zinc-900 bg-zinc-100 max-w-[calc(100%-64px)] self-start",
         className
       )}
     >
