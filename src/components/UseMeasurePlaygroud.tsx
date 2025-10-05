@@ -6,7 +6,12 @@ import {
   SparklesIcon,
   StopIcon,
 } from "@heroicons/react/16/solid";
-import { motion, useSpring, type Transition } from "motion/react";
+import {
+  AnimatePresence,
+  motion,
+  useSpring,
+  type Transition,
+} from "motion/react";
 import { useEffect, useState } from "react";
 import useMeasure from "react-use-measure";
 import { twMerge } from "tailwind-merge";
@@ -45,7 +50,7 @@ export function UseMeasurePlaygroud() {
   return (
     <div className="w-screen h-screen bg-zinc-50 select-none">
       <div className="absolute bottom-0 left-0 right-0 -bg-red-500/20">
-        <div className="relative max-w-2xl mx-auto px-4 py-4 flex items-center justify-center gap-2 -bg-blue-500/20">
+        <motion.div className="relative max-w-2xl mx-auto px-4 py-4 flex items-center justify-center gap-2 -bg-blue-500/20">
           <ExpandingPanel
             isOpen={openIndex === 0}
             onClick={() => {
@@ -54,28 +59,50 @@ export function UseMeasurePlaygroud() {
             isTrancribing={isTrancribing}
             setIsTrancribing={setIsTrancribing}
           />
-          {!isTrancribing && (
-            <motion.div
-              className="shrink-0 flex justify-center items-center px-4 pl-3 gap-1 h-11 text-white font-medium text-[14px] leading-5 bg-emerald-700 hover:bg-emerald-800 ring-[0.5px] ring-inset ring-black/10 shadow-lg shadow-emerald-950/20 rounded-[22px]"
-              animate={{
-                opacity: openIndex === 0 ? 0 : 1,
-                scale: openIndex === 0 ? 0.9 : 1,
-                filter: openIndex === 0 ? "blur(8px)" : "blur(0px)",
-              }}
-              transition={{
-                duration: 0.2,
-                ease: "easeOut",
-              }}
-            >
-              <SparklesIcon className="size-4" /> Generate notes
-            </motion.div>
-          )}
+          <AnimatePresence mode="popLayout" initial={false}>
+            {!isTrancribing && (
+              <motion.div
+                key="generate-notes"
+                className="shrink-0 flex justify-center items-center px-4 pl-3 gap-1 h-11 text-white font-medium text-[14px] leading-5 bg-emerald-700 hover:bg-emerald-800 ring-[0.5px] ring-inset ring-black/10 shadow-lg shadow-emerald-950/20 rounded-[22px]"
+                initial={{
+                  opacity: 0,
+                  scale: 0.8,
+                  filter: "blur(8px)",
+                }}
+                animate={{
+                  opacity: openIndex === 0 ? 0 : 1,
+                  scale: openIndex === 0 ? 0.9 : 1,
+                  filter: openIndex === 0 ? "blur(8px)" : "blur(0px)",
+                }}
+                exit={{
+                  opacity: 0,
+                  scale: 0.8,
+                  filter: "blur(8px)",
+                  transition: {
+                    duration: 0.2,
+                    ease: "easeOut",
+                  },
+                }}
+                transition={{
+                  duration: 0.2,
+                  ease: "easeOut",
+                }}
+              >
+                <SparklesIcon className="size-4" />{" "}
+                <div className="whitespace-nowrap">Generate notes</div>
+              </motion.div>
+            )}
+          </AnimatePresence>
           <motion.div
             className="flex-1 h-11 bg-white ring-[0.5px] ring-black/20 shadow-lg rounded-[22px] text-sm text-zinc-400 px-4 flex flex-row items-center justify-start truncate"
+            layout
             animate={{
               opacity: openIndex === 0 ? 0 : 1,
               scale: openIndex === 0 ? 0.95 : 1,
               filter: openIndex === 0 ? "blur(8px)" : "blur(0px)",
+            }}
+            style={{
+              borderRadius: "22px",
             }}
             transition={{
               duration: 0.2,
@@ -84,7 +111,7 @@ export function UseMeasurePlaygroud() {
           >
             <span className="truncate">Ask anything ⌘J, recipes /</span>
           </motion.div>
-        </div>
+        </motion.div>
       </div>
     </div>
   );
