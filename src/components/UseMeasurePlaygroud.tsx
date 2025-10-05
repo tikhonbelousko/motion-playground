@@ -3,7 +3,6 @@ import {
   LanguageIcon,
   MagnifyingGlassIcon,
   MinusIcon,
-  SparklesIcon,
   StopIcon,
 } from "@heroicons/react/16/solid";
 import { motion, useSpring, type Transition } from "motion/react";
@@ -62,9 +61,19 @@ export function UseMeasurePlaygroud() {
           {/* <div className="shrink-0 flex justify-center items-center px-4 pl-3 gap-1 h-11 text-white font-medium text-[14px] leading-5 bg-emerald-700 hover:bg-emerald-800 ring-[0.5px] ring-inset ring-black/10 shadow-lg rounded-[22px]">
             <SparklesIcon className="size-4" /> Generate notes
           </div> */}
-          <div className="flex-1 h-11 bg-white ring-[0.5px] ring-black/20 shadow-lg rounded-[22px] text-sm text-zinc-400 px-4 flex flex-row items-center justify-start">
+          <motion.div
+            className="flex-1 h-11 bg-white ring-[0.5px] ring-black/20 shadow-lg rounded-[22px] text-sm text-zinc-400 px-4 flex flex-row items-center justify-start"
+            animate={{
+              opacity: openIndex === 0 ? 0 : 1,
+              scale: openIndex === 0 ? 0.95 : 1,
+            }}
+            transition={{
+              duration: 0.2,
+              ease: "easeOut",
+            }}
+          >
             Ask anything ⌘J, recipes /
-          </div>
+          </motion.div>
         </div>
       </div>
     </div>
@@ -122,9 +131,6 @@ function ExpandingPanel({
       <div
         className="absolute left-[8px] bottom-[8px] right-[8px] h-[500px] -bg-green-500/20 pointer-events-none"
         ref={panelRef}
-        style={{
-          zIndex: isOpen ? 10 : 0,
-        }}
       ></div>
 
       <div
@@ -139,7 +145,7 @@ function ExpandingPanel({
             height: height,
             left: left,
             bottom: bottom,
-            zIndex: isOpen ? 10 : 0,
+            zIndex: isOpen ? 10 : 10,
           }}
         >
           <motion.div
