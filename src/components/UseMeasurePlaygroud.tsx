@@ -175,6 +175,7 @@ function ExpandingPanel({
     panelBounds.height,
     buttonBounds.width,
     buttonBounds.height,
+    isTrancribing,
   ]);
 
   return (
@@ -231,7 +232,7 @@ function ExpandingPanel({
             }}
             transition={
               isOpen
-                ? { delay: 0.1, duration: 0.1, ease: "easeOut" }
+                ? { delay: 0.1, duration: 0.12, ease: "easeOut" }
                 : { duration: 0.1, ease: "easeOut" }
             }
           >
