@@ -45,7 +45,7 @@ const closeSpring: Transition = {
 
 export function UseMeasurePlaygroud() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
-  const [isTrancribing, setIsTrancribing] = useState(false);
+  const [isTrancribing, setIsTrancribing] = useState(true);
 
   return (
     <div className="w-screen h-screen bg-zinc-50 select-none">
