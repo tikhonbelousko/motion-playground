@@ -1,9 +1,11 @@
-import { LayoutIdPlayground } from "./components/LayoutIdPlayground";
+// import { LayoutIdPlayground } from "./components/LayoutIdPlayground";
+import { UseMeasurePlaygroud } from "./components/UseMeasurePlaygroud";
 
 function App() {
   return (
     <>
-      <LayoutIdPlayground />
+      {/* <LayoutIdPlayground /> */}
+      <UseMeasurePlaygroud />
     </>
   );
 }
