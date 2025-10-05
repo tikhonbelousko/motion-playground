@@ -59,9 +59,9 @@ export function UseMeasurePlaygroud() {
               setOpenIndex(i => (i === 0 ? null : 0));
             }}
           />
-          <div className="shrink-0 flex justify-center items-center px-4 pl-3 gap-1 h-11 text-white font-medium text-[14px] leading-5 bg-emerald-700 hover:bg-emerald-800 ring-[0.5px] ring-inset ring-black/10 shadow-lg rounded-[22px]">
+          {/* <div className="shrink-0 flex justify-center items-center px-4 pl-3 gap-1 h-11 text-white font-medium text-[14px] leading-5 bg-emerald-700 hover:bg-emerald-800 ring-[0.5px] ring-inset ring-black/10 shadow-lg rounded-[22px]">
             <SparklesIcon className="size-4" /> Generate notes
-          </div>
+          </div> */}
           <div className="flex-1 h-11 bg-white ring-[0.5px] ring-black/20 shadow-lg rounded-[22px] text-sm text-zinc-400 px-4 flex flex-row items-center justify-start">
             Ask anything ⌘J, recipes /
           </div>
