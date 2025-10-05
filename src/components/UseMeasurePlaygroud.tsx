@@ -40,17 +40,10 @@ const closeSpring: Transition = {
 
 export function UseMeasurePlaygroud() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
+  const [isTrancribing, setIsTrancribing] = useState(false);
 
   return (
-    <div
-      className="w-screen h-screen bg-zinc-50 select-none"
-      onClick={() => {
-        if (openIndex === null) {
-          return;
-        }
-        setOpenIndex(null);
-      }}
-    >
+    <div className="w-screen h-screen bg-zinc-50 select-none">
       <div className="absolute bottom-0 left-0 right-0 -bg-red-500/20">
         <div className="relative max-w-2xl mx-auto px-4 py-4 flex items-center justify-center gap-2 -bg-blue-500/20">
           <ExpandingPanel
@@ -58,21 +51,25 @@ export function UseMeasurePlaygroud() {
             onClick={() => {
               setOpenIndex(i => (i === 0 ? null : 0));
             }}
+            isTrancribing={isTrancribing}
+            setIsTrancribing={setIsTrancribing}
           />
-          <motion.div
-            className="shrink-0 flex justify-center items-center px-4 pl-3 gap-1 h-11 text-white font-medium text-[14px] leading-5 bg-emerald-700 hover:bg-emerald-800 ring-[0.5px] ring-inset ring-black/10 shadow-lg shadow-emerald-950/20 rounded-[22px]"
-            animate={{
-              opacity: openIndex === 0 ? 0 : 1,
-              scale: openIndex === 0 ? 0.9 : 1,
-              filter: openIndex === 0 ? "blur(8px)" : "blur(0px)",
-            }}
-            transition={{
-              duration: 0.2,
-              ease: "easeOut",
-            }}
-          >
-            <SparklesIcon className="size-4" /> Generate notes
-          </motion.div>
+          {!isTrancribing && (
+            <motion.div
+              className="shrink-0 flex justify-center items-center px-4 pl-3 gap-1 h-11 text-white font-medium text-[14px] leading-5 bg-emerald-700 hover:bg-emerald-800 ring-[0.5px] ring-inset ring-black/10 shadow-lg shadow-emerald-950/20 rounded-[22px]"
+              animate={{
+                opacity: openIndex === 0 ? 0 : 1,
+                scale: openIndex === 0 ? 0.9 : 1,
+                filter: openIndex === 0 ? "blur(8px)" : "blur(0px)",
+              }}
+              transition={{
+                duration: 0.2,
+                ease: "easeOut",
+              }}
+            >
+              <SparklesIcon className="size-4" /> Generate notes
+            </motion.div>
+          )}
           <motion.div
             className="flex-1 h-11 bg-white ring-[0.5px] ring-black/20 shadow-lg rounded-[22px] text-sm text-zinc-400 px-4 flex flex-row items-center justify-start truncate"
             animate={{
@@ -96,9 +93,13 @@ export function UseMeasurePlaygroud() {
 function ExpandingPanel({
   isOpen,
   onClick,
+  isTrancribing,
+  setIsTrancribing,
 }: {
   isOpen: boolean;
   onClick: () => void;
+  isTrancribing: boolean;
+  setIsTrancribing: (isTrancribing: boolean) => void;
 }) {
   const [panelRef, panelBounds] = useMeasure();
   const [buttonRef, buttonBounds] = useMeasure();
@@ -146,7 +147,36 @@ function ExpandingPanel({
         ref={panelRef}
       ></div>
 
-      <div ref={buttonRef} className="relative shrink-0 w-[86px] h-11">
+      <div ref={buttonRef} className="relative shrink-0 h-11">
+        <div
+          className="shrink-0 flex items-center justify-center h-11 -bg-red-500/20 px-1.5"
+          style={{
+            zIndex: 20,
+            position: "relative",
+          }}
+        >
+          <div
+            className="h-8 w-[42px] rounded-full flex items-center justify-center hover:bg-zinc-100"
+            onClick={onClick}
+          >
+            <DancingBars />
+          </div>
+          <div
+            className="h-8 min-w-8 flex items-center rounded-full justify-center hover:bg-zinc-100"
+            onClick={() => {
+              setIsTrancribing(!isTrancribing);
+            }}
+          >
+            {isTrancribing ? (
+              <StopIcon className="size-4 text-zinc-500" />
+            ) : (
+              <div className="text-[13px] leading-4 font-medium text-emerald-700 px-3">
+                Resume
+              </div>
+            )}
+          </div>
+        </div>
+
         <motion.div
           className="absolute bg-white ring-[0.5px] ring-black/20 rounded-[22px] -bg-red-500/20 shadow-lg flex flex-col items-stretch overflow-hidden"
           style={{
@@ -216,24 +246,12 @@ function ExpandingPanel({
           </motion.div>
 
           <motion.div
-            className="shrink-0 flex flex-row items-center justify-between -bg-red-500"
+            className="shrink-0 flex flex-row items-center justify-end -bg-red-500"
             animate={{
               padding: isOpen ? 14 : 6,
             }}
             transition={isOpen ? openSpring : closeSpring}
           >
-            <div className="shrink-0 flex items-center justify-center">
-              <div
-                className="h-8 w-[42px] rounded-full flex items-center justify-center hover:bg-zinc-100"
-                onClick={onClick}
-              >
-                <DancingBars />
-              </div>
-              <div className="size-8 flex items-center rounded-full justify-center hover:bg-zinc-100">
-                <StopIcon className="size-4 text-zinc-500" />
-              </div>
-            </div>
-
             <motion.div
               className="flex items-center justify-between"
               animate={{
