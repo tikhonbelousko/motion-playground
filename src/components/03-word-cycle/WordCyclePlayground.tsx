@@ -30,9 +30,11 @@ const DEFAULT_CONTAINER_THRESHOLD_END = 0.1;
 const DEFAULT_CYCLE_INTERVAL = 2;
 const DEFAULT_WORD_DURATION = 1.8;
 const DEFAULT_CONTAINER_DURATION = 1.4;
+const DEFAULT_STAGGER = 0.1;
 
 interface AnimatedWordProps {
   word: string;
+  color: string;
   // Enter animation
   enterBlurStart: number;
   enterBlurEnd: number;
@@ -53,6 +55,7 @@ const AnimatedWord = forwardRef<HTMLDivElement, AnimatedWordProps>(
   function AnimatedWord(
     {
       word,
+      color,
       enterBlurStart,
       enterBlurEnd,
       enterThresholdStart,
@@ -160,7 +163,7 @@ const AnimatedWord = forwardRef<HTMLDivElement, AnimatedWordProps>(
                 <feComponentTransfer in="blur" result="threshold">
                   <feFuncA type="linear" slope={slope} intercept={intercept} />
                 </feComponentTransfer>
-                <feFlood floodColor="#1c1917" floodOpacity="1" result="black" />
+                <feFlood floodColor={color} floodOpacity="1" result="black" />
                 <feComposite in="black" in2="threshold" operator="in" />
               </filter>
             </defs>
@@ -172,13 +175,203 @@ const AnimatedWord = forwardRef<HTMLDivElement, AnimatedWordProps>(
   }
 );
 
-export function WordCyclePlayground() {
+interface WordCycleLayerProps {
+  delay: number;
+  color: string;
+  // Word filter props
+  wordFilterEnabled: boolean;
+  enterBlurStart: number;
+  middleBlur: number;
+  enterThresholdStart: number;
+  middleThreshold: number;
+  exitBlurEnd: number;
+  exitThresholdEnd: number;
+  // Container filter props
+  containerFilterEnabled: boolean;
+  containerBlurStart: number;
+  containerBlurPeak: number;
+  containerBlurEnd: number;
+  containerThresholdStart: number;
+  containerThresholdPeak: number;
+  containerThresholdEnd: number;
+  // Timing
+  wordDuration: number;
+  containerDuration: number;
+  cycleInterval: number;
+}
+
+function WordCycleLayer({
+  delay,
+  color,
+  wordFilterEnabled,
+  enterBlurStart,
+  middleBlur,
+  enterThresholdStart,
+  middleThreshold,
+  exitBlurEnd,
+  exitThresholdEnd,
+  containerFilterEnabled,
+  containerBlurStart,
+  containerBlurPeak,
+  containerBlurEnd,
+  containerThresholdStart,
+  containerThresholdPeak,
+  containerThresholdEnd,
+  wordDuration,
+  containerDuration,
+  cycleInterval,
+}: WordCycleLayerProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [keyCounter, setKeyCounter] = useState(0);
+  const [started, setStarted] = useState(false);
   const containerId = useId();
   const containerFilterId = `container-filter-${containerId}`;
   const prevIndex = useRef(currentIndex);
 
+  // Container filter state
+  const [containerThreshold, setContainerThreshold] = useState(
+    containerThresholdStart
+  );
+  const [containerBlur, setContainerBlur] = useState(containerBlurStart);
+  const containerThresholdValue = useMotionValue(containerThresholdStart);
+  const containerBlurValue = useMotionValue(containerBlurStart);
+
+  useEffect(() => {
+    return containerThresholdValue.on("change", (v) =>
+      setContainerThreshold(v)
+    );
+  }, [containerThresholdValue]);
+
+  useEffect(() => {
+    return containerBlurValue.on("change", (v) => setContainerBlur(v));
+  }, [containerBlurValue]);
+
+  // Start after delay
+  useEffect(() => {
+    const timeout = setTimeout(() => setStarted(true), delay);
+    return () => clearTimeout(timeout);
+  }, [delay]);
+
+  // Animate container filter when index changes
+  useEffect(() => {
+    if (prevIndex.current !== currentIndex) {
+      // Threshold: start -> peak -> end
+      animate(
+        containerThresholdValue,
+        [
+          containerThresholdStart,
+          containerThresholdPeak,
+          containerThresholdEnd,
+        ],
+        {
+          duration: containerDuration,
+          ease: "easeInOut",
+        }
+      );
+      // Blur: start -> peak -> end
+      animate(
+        containerBlurValue,
+        [containerBlurStart, containerBlurPeak, containerBlurEnd],
+        {
+          duration: containerDuration,
+          ease: "easeInOut",
+        }
+      );
+      prevIndex.current = currentIndex;
+    }
+  }, [
+    currentIndex,
+    containerDuration,
+    containerThresholdValue,
+    containerBlurValue,
+    containerThresholdStart,
+    containerThresholdPeak,
+    containerThresholdEnd,
+    containerBlurStart,
+    containerBlurPeak,
+    containerBlurEnd,
+  ]);
+
+  useEffect(() => {
+    if (!started) return;
+
+    const interval = setInterval(() => {
+      setCurrentIndex((prev) => (prev + 1) % CYCLING_WORDS.length);
+      setKeyCounter((prev) => prev + 1);
+    }, cycleInterval * 1000);
+
+    return () => clearInterval(interval);
+  }, [cycleInterval, started]);
+
+  const containerSlope = 100;
+  const containerIntercept = -containerThreshold * containerSlope;
+
+  if (!started) return null;
+
+  return (
+    <div className="w-full h-full" style={{ gridArea: "1/1" }}>
+      {/* Container SVG Filter - blends the two words together */}
+      {containerFilterEnabled && (
+        <svg width="0" height="0" style={{ position: "absolute" }}>
+          <defs>
+            <filter
+              id={containerFilterId}
+              x="-50%"
+              y="-50%"
+              width="200%"
+              height="200%"
+            >
+              <feGaussianBlur
+                in="SourceGraphic"
+                stdDeviation={containerBlur}
+                result="blur"
+              />
+              <feComponentTransfer in="blur" result="threshold">
+                <feFuncA
+                  type="linear"
+                  slope={containerSlope}
+                  intercept={containerIntercept}
+                />
+              </feComponentTransfer>
+              <feFlood floodColor={color} floodOpacity="1" result="black" />
+              <feComposite in="black" in2="threshold" operator="in" />
+            </filter>
+          </defs>
+        </svg>
+      )}
+
+      <div
+        className="w-full h-40 text-center font-serif font-light text-[200px] tracking-tighter relative"
+        style={
+          containerFilterEnabled
+            ? { filter: `url(#${containerFilterId})` }
+            : undefined
+        }
+      >
+        <AnimatePresence mode="popLayout">
+          <AnimatedWord
+            key={keyCounter}
+            word={CYCLING_WORDS[currentIndex]}
+            color={color}
+            enterBlurStart={enterBlurStart}
+            enterBlurEnd={middleBlur}
+            enterThresholdStart={enterThresholdStart}
+            enterThresholdEnd={middleThreshold}
+            exitBlurStart={middleBlur}
+            exitBlurEnd={exitBlurEnd}
+            exitThresholdStart={middleThreshold}
+            exitThresholdEnd={exitThresholdEnd}
+            duration={wordDuration}
+            exitDuration={Math.min(cycleInterval, wordDuration)}
+            filterEnabled={wordFilterEnabled}
+          />
+        </AnimatePresence>
+      </div>
+    </div>
+  );
+}
+
+export function WordCyclePlayground() {
   // Word filter controls
   const { wordFilterEnabled } = useControls("Word Filter", {
     wordFilterEnabled: { value: true, label: "Enabled" },
@@ -291,9 +484,8 @@ export function WordCyclePlayground() {
   });
 
   // Timing controls
-  const { wordDuration, containerDuration, cycleInterval } = useControls(
-    "Timing",
-    {
+  const { wordDuration, containerDuration, cycleInterval, stagger } =
+    useControls("Timing", {
       cycleInterval: {
         value: DEFAULT_CYCLE_INTERVAL,
         min: 0.5,
@@ -312,78 +504,34 @@ export function WordCyclePlayground() {
         max: 4,
         step: 0.1,
       },
-    }
-  );
+      stagger: {
+        value: DEFAULT_STAGGER,
+        min: 0,
+        max: 1,
+        step: 0.01,
+        label: "Stagger",
+      },
+    });
 
-  // Container filter state
-  const [containerThreshold, setContainerThreshold] = useState(
-    containerThresholdStart
-  );
-  const [containerBlur, setContainerBlur] = useState(containerBlurStart);
-  const containerThresholdValue = useMotionValue(containerThresholdStart);
-  const containerBlurValue = useMotionValue(containerBlurStart);
-
-  useEffect(() => {
-    return containerThresholdValue.on("change", (v) =>
-      setContainerThreshold(v)
-    );
-  }, [containerThresholdValue]);
-
-  useEffect(() => {
-    return containerBlurValue.on("change", (v) => setContainerBlur(v));
-  }, [containerBlurValue]);
-
-  // Animate container filter when index changes
-  useEffect(() => {
-    if (prevIndex.current !== currentIndex) {
-      // Threshold: start -> peak -> end
-      animate(
-        containerThresholdValue,
-        [
-          containerThresholdStart,
-          containerThresholdPeak,
-          containerThresholdEnd,
-        ],
-        {
-          duration: containerDuration,
-          ease: "easeInOut",
-        }
-      );
-      // Blur: start -> peak -> end
-      animate(
-        containerBlurValue,
-        [containerBlurStart, containerBlurPeak, containerBlurEnd],
-        {
-          duration: containerDuration,
-          ease: "easeInOut",
-        }
-      );
-      prevIndex.current = currentIndex;
-    }
-  }, [
-    currentIndex,
-    containerDuration,
-    containerThresholdValue,
-    containerBlurValue,
-    containerThresholdStart,
-    containerThresholdPeak,
-    containerThresholdEnd,
+  const sharedProps = {
+    wordFilterEnabled,
+    enterBlurStart,
+    middleBlur,
+    enterThresholdStart,
+    middleThreshold,
+    exitBlurEnd,
+    exitThresholdEnd,
+    containerFilterEnabled,
     containerBlurStart,
     containerBlurPeak,
     containerBlurEnd,
-  ]);
-
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setCurrentIndex((prev) => (prev + 1) % CYCLING_WORDS.length);
-      setKeyCounter((prev) => prev + 1);
-    }, cycleInterval * 1000);
-
-    return () => clearInterval(interval);
-  }, [cycleInterval]);
-
-  const containerSlope = 100;
-  const containerIntercept = -containerThreshold * containerSlope;
+    containerThresholdStart,
+    containerThresholdPeak,
+    containerThresholdEnd,
+    wordDuration,
+    containerDuration,
+    cycleInterval,
+  };
 
   return (
     <div className="w-screen h-screen bg-zinc-100 select-none flex items-center justify-center">
@@ -392,61 +540,19 @@ export function WordCyclePlayground() {
         theme={{ sizes: { rootWidth: "400px" } }}
         collapsed
       />
-      {/* Container SVG Filter - blends the two words together */}
-      {containerFilterEnabled && (
-        <svg width="0" height="0" style={{ position: "absolute" }}>
-          <defs>
-            <filter
-              id={containerFilterId}
-              x="-50%"
-              y="-50%"
-              width="200%"
-              height="200%"
-            >
-              <feGaussianBlur
-                in="SourceGraphic"
-                stdDeviation={containerBlur}
-                result="blur"
-              />
-              <feComponentTransfer in="blur" result="threshold">
-                <feFuncA
-                  type="linear"
-                  slope={containerSlope}
-                  intercept={containerIntercept}
-                />
-              </feComponentTransfer>
-              <feFlood floodColor="#1c1917" floodOpacity="1" result="black" />
-              <feComposite in="black" in2="threshold" operator="in" />
-            </filter>
-          </defs>
-        </svg>
-      )}
-
-      <div
-        className="w-full h-40 text-center font-serif font-light text-[200px] tracking-tighter relative"
-        style={
-          containerFilterEnabled
-            ? { filter: `url(#${containerFilterId})` }
-            : undefined
-        }
-      >
-        <AnimatePresence mode="popLayout">
-          <AnimatedWord
-            key={keyCounter}
-            word={CYCLING_WORDS[currentIndex]}
-            enterBlurStart={enterBlurStart}
-            enterBlurEnd={middleBlur}
-            enterThresholdStart={enterThresholdStart}
-            enterThresholdEnd={middleThreshold}
-            exitBlurStart={middleBlur}
-            exitBlurEnd={exitBlurEnd}
-            exitThresholdStart={middleThreshold}
-            exitThresholdEnd={exitThresholdEnd}
-            duration={wordDuration}
-            exitDuration={Math.min(cycleInterval, wordDuration)}
-            filterEnabled={wordFilterEnabled}
-          />
-        </AnimatePresence>
+      <div className="grid w-full h-40" key={stagger}>
+        <WordCycleLayer delay={0} color="#BA92DF" {...sharedProps} />
+        <WordCycleLayer
+          delay={stagger * 1000}
+          color="#FD9E01"
+          {...sharedProps}
+        />
+        <WordCycleLayer
+          delay={stagger * 2000}
+          color="#F77506"
+          {...sharedProps}
+        />
+        <WordCycleLayer delay={stagger * 3000} color="#000" {...sharedProps} />
       </div>
     </div>
   );
