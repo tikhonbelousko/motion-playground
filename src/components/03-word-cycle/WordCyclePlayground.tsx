@@ -8,44 +8,7 @@ import {
 } from "motion/react";
 import { useControls, Leva } from "leva";
 
-const CYCLING_WORDS = [
-  "Granola",
-  "is",
-  "for",
-  "the",
-  "ones",
-  "who",
-  "do.",
-  "The",
-  "ones",
-  "who",
-  "get",
-  "as",
-  "much",
-  "done",
-  "today",
-  "so",
-  "that",
-  "their",
-  "load",
-  "is",
-  "a",
-  "bit",
-  "lighter",
-  "for",
-  "tomorrow.",
-  "So",
-  "that",
-  "they",
-  "can",
-  "be",
-  "1%",
-  "better",
-  "each",
-  "time",
-  "they",
-  "try.",
-];
+const CYCLING_WORDS = ["Dream.", "Build.", "Ship.", "Repeat."];
 
 // Word Filter defaults
 const DEFAULT_WORD_ENTER_BLUR_START = 7;
@@ -56,17 +19,17 @@ const DEFAULT_WORD_EXIT_BLUR_END = 10;
 const DEFAULT_WORD_EXIT_THRESHOLD_END = 1;
 
 // Container Filter defaults
-const DEFAULT_CONTAINER_BLUR_START = 3;
-const DEFAULT_CONTAINER_BLUR_PEAK = 9;
-const DEFAULT_CONTAINER_BLUR_END = 3;
+const DEFAULT_CONTAINER_BLUR_START = 2;
+const DEFAULT_CONTAINER_BLUR_PEAK = 8;
+const DEFAULT_CONTAINER_BLUR_END = 2;
 const DEFAULT_CONTAINER_THRESHOLD_START = 0.1;
-const DEFAULT_CONTAINER_THRESHOLD_PEAK = 0.3;
+const DEFAULT_CONTAINER_THRESHOLD_PEAK = 0.4;
 const DEFAULT_CONTAINER_THRESHOLD_END = 0.1;
 
 // Timing defaults (all in seconds)
-const DEFAULT_CYCLE_INTERVAL = 1;
-const DEFAULT_WORD_DURATION = 1;
-const DEFAULT_CONTAINER_DURATION = 0.7;
+const DEFAULT_CYCLE_INTERVAL = 2;
+const DEFAULT_WORD_DURATION = 1.8;
+const DEFAULT_CONTAINER_DURATION = 1.4;
 
 interface AnimatedWordProps {
   word: string;
@@ -423,10 +386,11 @@ export function WordCyclePlayground() {
   const containerIntercept = -containerThreshold * containerSlope;
 
   return (
-    <div className="w-screen h-screen bg-zinc-50 select-none flex items-center justify-center">
+    <div className="w-screen h-screen bg-zinc-100 select-none flex items-center justify-center">
       <Leva
         titleBar={{ title: "Word Cycle" }}
         theme={{ sizes: { rootWidth: "400px" } }}
+        collapsed
       />
       {/* Container SVG Filter - blends the two words together */}
       {containerFilterEnabled && (

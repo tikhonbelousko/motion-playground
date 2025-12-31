@@ -2,8 +2,8 @@ import { useControls } from "leva";
 
 export function InkbleedPlayground() {
   const { blur, threshold } = useControls({
-    blur: { value: 2, min: 0, max: 20, step: 0.1 },
-    threshold: { value: 0.5, min: 0, max: 1, step: 0.01 },
+    blur: { value: 3, min: 0, max: 20, step: 0.1 },
+    threshold: { value: 0.25, min: 0, max: 1, step: 0.01 },
   });
 
   // Calculate the slope for the threshold effect
@@ -12,7 +12,7 @@ export function InkbleedPlayground() {
   const intercept = -threshold * slope;
 
   return (
-    <div className="w-screen h-screen bg-zinc-50 select-none flex items-center justify-center">
+    <div className="w-screen h-screen bg-zinc-100 select-none flex items-center justify-center">
       {/* SVG Filter Definition */}
       <svg width="0" height="0" style={{ position: "absolute" }}>
         <defs>
@@ -48,7 +48,7 @@ export function InkbleedPlayground() {
           filter: "url(#inkbleed-filter)",
         }}
       >
-        granola
+        Granola
       </div>
     </div>
   );
