@@ -3,13 +3,13 @@ import { useControls } from "leva";
 export function InkbleedPlayground() {
   const { blur, threshold } = useControls({
     blur: { value: 2, min: 0, max: 20, step: 0.1 },
-    threshold: { value: 0.5, min: 0.5, max: 1, step: 0.01 },
+    threshold: { value: 0.5, min: 0, max: 1, step: 0.01 },
   });
 
   // Calculate the slope for the threshold effect
   // Higher slope = sharper threshold transition
   const slope = 100;
-  const intercept = -(threshold * slope) + 0.5 * slope;
+  const intercept = -threshold * slope;
 
   return (
     <div className="w-screen h-screen bg-zinc-50 select-none flex items-center justify-center">
