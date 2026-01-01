@@ -32,6 +32,13 @@ const DEFAULT_WORD_DURATION = 1.8;
 const DEFAULT_CONTAINER_DURATION = 1.4;
 const DEFAULT_STAGGER = 0.05;
 
+// Layer colors
+const DEFAULT_COLOR_LAYER_1 = "#a793dc";
+const DEFAULT_COLOR_LAYER_2 = "#febe29";
+const DEFAULT_COLOR_LAYER_3 = "#ff8a0d";
+const DEFAULT_COLOR_LAYER_4 = "#292929";
+const DEFAULT_COLOR_BACKGROUND = "#E9EBE5";
+
 interface AnimatedWordProps {
   word: string;
   color: string;
@@ -520,6 +527,21 @@ export function WordCyclePlayground() {
       },
     });
 
+  // Color controls
+  const {
+    colorLayer1,
+    colorLayer2,
+    colorLayer3,
+    colorLayer4,
+    colorBackground,
+  } = useControls("Colors", {
+    colorLayer1: { value: DEFAULT_COLOR_LAYER_1, label: "Layer 1" },
+    colorLayer2: { value: DEFAULT_COLOR_LAYER_2, label: "Layer 2" },
+    colorLayer3: { value: DEFAULT_COLOR_LAYER_3, label: "Layer 3" },
+    colorLayer4: { value: DEFAULT_COLOR_LAYER_4, label: "Layer 4" },
+    colorBackground: { value: DEFAULT_COLOR_BACKGROUND, label: "Background" },
+  });
+
   const sharedProps = {
     wordFilterEnabled,
     enterBlurStart,
@@ -541,25 +563,32 @@ export function WordCyclePlayground() {
   };
 
   return (
-    <div className="w-screen h-screen bg-zinc-100 select-none flex items-center justify-center">
+    <div
+      className="w-screen h-screen select-none flex items-center justify-center"
+      style={{ backgroundColor: colorBackground }}
+    >
       <Leva
         titleBar={{ title: "Word Cycle" }}
         theme={{ sizes: { rootWidth: "400px" } }}
         collapsed
       />
       <div className="grid w-full h-40" key={stagger}>
-        <WordCycleLayer delay={0} color="#BA92DF" {...sharedProps} />
+        <WordCycleLayer delay={0} color={colorLayer1} {...sharedProps} />
         <WordCycleLayer
           delay={stagger * 1000}
-          color="#FD9E01"
+          color={colorLayer2}
           {...sharedProps}
         />
         <WordCycleLayer
           delay={stagger * 2000}
-          color="#F77506"
+          color={colorLayer3}
           {...sharedProps}
         />
-        <WordCycleLayer delay={stagger * 3000} color="#000" {...sharedProps} />
+        <WordCycleLayer
+          delay={stagger * 3000}
+          color={colorLayer4}
+          {...sharedProps}
+        />
       </div>
     </div>
   );
