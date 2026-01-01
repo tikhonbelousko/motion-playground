@@ -306,6 +306,13 @@ function WordCycleLayer({
   const containerSlope = 100;
   const containerIntercept = -containerThreshold * containerSlope;
 
+  // When the cycle interval is shorter than the word duration, finish the exit
+  // animation exactly at the end of the word duration so words don't linger.
+  const wordExitDuration =
+    cycleInterval < wordDuration
+      ? Math.max(wordDuration - cycleInterval, 0.01)
+      : wordDuration;
+
   if (!started) return null;
 
   return (
@@ -362,7 +369,7 @@ function WordCycleLayer({
             exitThresholdStart={middleThreshold}
             exitThresholdEnd={exitThresholdEnd}
             duration={wordDuration}
-            exitDuration={Math.min(cycleInterval, wordDuration)}
+            exitDuration={wordExitDuration}
             filterEnabled={wordFilterEnabled}
           />
         </AnimatePresence>
