@@ -30,7 +30,7 @@ const DEFAULT_CONTAINER_THRESHOLD_END = 0.1;
 const DEFAULT_CYCLE_INTERVAL = 2;
 const DEFAULT_WORD_DURATION = 1.8;
 const DEFAULT_CONTAINER_DURATION = 1.4;
-const DEFAULT_STAGGER = 0.1;
+const DEFAULT_STAGGER = 0.05;
 
 interface AnimatedWordProps {
   word: string;
