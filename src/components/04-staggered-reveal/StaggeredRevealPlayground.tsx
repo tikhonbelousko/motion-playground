@@ -155,7 +155,7 @@ function TextLayer({
   );
 }
 
-export function LineByLinePlayground() {
+export function StaggeredRevealPlayground() {
   const [key, setKey] = useState(0);
 
   const [
@@ -276,7 +276,7 @@ export function LineByLinePlayground() {
       style={{ backgroundColor: colorBackground }}
     >
       <Leva
-        titleBar={{ title: "Line by Line" }}
+        titleBar={{ title: "Staggered Reveal" }}
         theme={{ sizes: { rootWidth: "320px" } }}
       />
 

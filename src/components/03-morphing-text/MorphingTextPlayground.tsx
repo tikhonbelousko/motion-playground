@@ -385,7 +385,7 @@ function WordCycleLayer({
   );
 }
 
-export function WordCyclePlayground() {
+export function MorphingTextPlayground() {
   // Word filter controls
   const { wordFilterEnabled } = useControls("Word Filter", {
     wordFilterEnabled: { value: true, label: "Enabled" },
@@ -568,7 +568,7 @@ export function WordCyclePlayground() {
       style={{ backgroundColor: colorBackground }}
     >
       <Leva
-        titleBar={{ title: "Word Cycle" }}
+        titleBar={{ title: "Morphing Text" }}
         theme={{ sizes: { rootWidth: "400px" } }}
         collapsed
       />

@@ -2,12 +2,12 @@ import { Route, Switch, Redirect, useLocation } from "wouter";
 import { UseMeasurePlaygroud } from "./components/01-transcription-sheet/UseMeasurePlaygroud";
 import { LayoutIdPlayground } from "./components/01-transcription-sheet/LayoutIdPlayground";
 import { InkbleedPlayground } from "./components/02-inkbleed/InkbleedPlayground";
-import { WordCyclePlayground } from "./components/03-word-cycle/WordCyclePlayground";
-import { LineByLinePlayground } from "./components/04-line-by-line/LineByLinePlayground";
+import { MorphingTextPlayground } from "./components/03-morphing-text/MorphingTextPlayground";
+import { StaggeredRevealPlayground } from "./components/04-staggered-reveal/StaggeredRevealPlayground";
 
 const demos = [
-  { id: "line-by-line", name: "Line by Line", component: LineByLinePlayground },
-  { id: "word-cycle", name: "Word Cycle", component: WordCyclePlayground },
+  { id: "staggered-reveal", name: "Staggered Reveal", component: StaggeredRevealPlayground },
+  { id: "morphing-text", name: "Morphing Text", component: MorphingTextPlayground },
   { id: "inkbleed", name: "Inkbleed", component: InkbleedPlayground },
   {
     id: "use-measure",
