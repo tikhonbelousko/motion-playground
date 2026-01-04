@@ -10,20 +10,52 @@ const COLOR_PRESETS = {
     layer2: "#febe29",
     layer3: "#ff8a0d",
     layer4: "#292929",
-    background: "#E9EBE5",
+    background: "#FCFCF8",
   },
   botanical: {
     layer1: "#FFD4EE",
     layer2: "#B2C248",
     layer3: "#5B6B2B",
     layer4: "#333332",
-    background: "#E9EBE5",
+    background: "#FCFCF8",
   },
 };
 
-type PresetName = keyof typeof COLOR_PRESETS;
+type ColorPresetName = keyof typeof COLOR_PRESETS;
 
 type AnimateBy = "line" | "word";
+
+// Animation presets
+const ANIMATION_PRESETS = {
+  default: {
+    animateBy: "line" as AnimateBy,
+    staggerDelay: 0.05,
+    duration: 0.2,
+    durationDecay: 1,
+    layerStagger: 0.05,
+  },
+  typewriter: {
+    animateBy: "word" as AnimateBy,
+    staggerDelay: 0.01,
+    duration: 0.1,
+    durationDecay: 0.9,
+    layerStagger: 0.05,
+  },
+};
+
+type AnimationPresetName = keyof typeof ANIMATION_PRESETS;
+
+// Calculate duration for a layer based on decay factor
+// Each layer's duration = baseDuration * decay^layerIndex
+// With decay = 1: all layers same duration (linear)
+// With decay = 0.5: each layer is half the duration of the previous
+function getLayerDuration(
+  baseDuration: number,
+  layerIndex: number,
+  decay: number
+): number {
+  return baseDuration * Math.pow(decay, layerIndex);
+}
 
 interface TextLayerProps {
   lines: string[];
@@ -126,40 +158,71 @@ function TextLayer({
 export function LineByLinePlayground() {
   const [key, setKey] = useState(0);
 
-  const { textChoice, animateBy, staggerDelay, duration, layerStagger } =
-    useControls({
-      textChoice: {
-        value: "medium",
-        options: ["short", "medium", "long"],
-        label: "Text",
+  const [
+    {
+      textChoice,
+      animateBy,
+      staggerDelay,
+      duration,
+      durationDecay,
+      layerStagger,
+    },
+    setAnimation,
+  ] = useControls(() => ({
+    animationPreset: {
+      value: "default" as AnimationPresetName,
+      options: Object.keys(ANIMATION_PRESETS) as AnimationPresetName[],
+      label: "Preset",
+      onChange: (value: AnimationPresetName) => {
+        const preset = ANIMATION_PRESETS[value];
+        setAnimation({
+          animateBy: preset.animateBy,
+          staggerDelay: preset.staggerDelay,
+          duration: preset.duration,
+          durationDecay: preset.durationDecay,
+          layerStagger: preset.layerStagger,
+        });
       },
-      animateBy: {
-        value: "line" as AnimateBy,
-        options: ["line", "word"] as AnimateBy[],
-        label: "Animate By",
-      },
-      staggerDelay: {
-        value: 0.05,
-        min: 0.01,
-        max: 0.5,
-        step: 0.01,
-        label: "Stagger",
-      },
-      duration: {
-        value: 0.2,
-        min: 0,
-        max: 2,
-        step: 0.01,
-        label: "Duration",
-      },
-      layerStagger: {
-        value: 0.05,
-        min: 0,
-        max: 1,
-        step: 0.01,
-        label: "Layer Stagger",
-      },
-    });
+    },
+    textChoice: {
+      value: "medium",
+      options: ["short", "medium", "long"],
+      label: "Text",
+    },
+    animateBy: {
+      value: ANIMATION_PRESETS.default.animateBy,
+      options: ["line", "word"] as AnimateBy[],
+      label: "Animate By",
+    },
+    staggerDelay: {
+      value: ANIMATION_PRESETS.default.staggerDelay,
+      min: 0.01,
+      max: 0.5,
+      step: 0.01,
+      label: "Stagger",
+    },
+    duration: {
+      value: ANIMATION_PRESETS.default.duration,
+      min: 0,
+      max: 2,
+      step: 0.01,
+      label: "Duration",
+    },
+    durationDecay: {
+      value: ANIMATION_PRESETS.default.durationDecay,
+      min: 0.3,
+      max: 1,
+      step: 0.05,
+      label: "Duration Decay",
+    },
+    layerStagger: {
+      value: ANIMATION_PRESETS.default.layerStagger,
+      min: 0,
+      max: 1,
+      step: 0.01,
+      label: "Layer Stagger",
+    },
+  }));
 
   const [
     { colorLayer1, colorLayer2, colorLayer3, colorLayer4, colorBackground },
@@ -168,10 +231,10 @@ export function LineByLinePlayground() {
     "Colors",
     () => ({
       preset: {
-        value: "sunset" as PresetName,
-        options: Object.keys(COLOR_PRESETS) as PresetName[],
+        value: "sunset" as ColorPresetName,
+        options: Object.keys(COLOR_PRESETS) as ColorPresetName[],
         label: "Preset",
-        onChange: (value: PresetName) => {
+        onChange: (value: ColorPresetName) => {
           const colors = COLOR_PRESETS[value];
           setColors({
             colorLayer1: colors.layer1,
@@ -203,7 +266,6 @@ export function LineByLinePlayground() {
   const sharedProps = {
     lines,
     staggerDelay,
-    duration,
     animationKey: key,
     animateBy,
   };
@@ -216,25 +278,35 @@ export function LineByLinePlayground() {
       <Leva
         titleBar={{ title: "Line by Line" }}
         theme={{ sizes: { rootWidth: "320px" } }}
-        collapsed
       />
 
-      <div className="grid" key={layerStagger}>
-        <TextLayer {...sharedProps} color={colorLayer1} layerDelay={0} />
+      <div
+        className="grid"
+        key={`${staggerDelay}-${duration}-${durationDecay}-${layerStagger}`}
+      >
+        <TextLayer
+          {...sharedProps}
+          color={colorLayer1}
+          layerDelay={0}
+          duration={getLayerDuration(duration, 0, durationDecay)}
+        />
         <TextLayer
           {...sharedProps}
           color={colorLayer2}
           layerDelay={layerStagger}
+          duration={getLayerDuration(duration, 1, durationDecay)}
         />
         <TextLayer
           {...sharedProps}
           color={colorLayer3}
           layerDelay={layerStagger * 2}
+          duration={getLayerDuration(duration, 2, durationDecay)}
         />
         <TextLayer
           {...sharedProps}
           color={colorLayer4}
           layerDelay={layerStagger * 3}
+          duration={getLayerDuration(duration, 3, durationDecay)}
         />
       </div>
     </div>
