@@ -6,7 +6,7 @@ import {
   animate,
   useIsPresent,
 } from "motion/react";
-import { useControls, Leva } from "leva";
+import { useControls, Leva, useCreateStore } from "leva";
 
 const CYCLING_WORDS = ["Dream.", "Build.", "Ship.", "Repeat."];
 
@@ -386,10 +386,17 @@ function WordCycleLayer({
 }
 
 export function MorphingTextDemo() {
+  // Create an isolated store for this demo to avoid conflicts with other routes
+  const store = useCreateStore();
+
   // Word filter controls
-  const { wordFilterEnabled } = useControls("Word Filter", {
-    wordFilterEnabled: { value: true, label: "Enabled" },
-  });
+  const { wordFilterEnabled } = useControls(
+    "Word Filter",
+    {
+      wordFilterEnabled: { value: true, label: "Enabled" },
+    },
+    { store }
+  );
 
   // Word Enter controls
   const { enterBlurStart, enterThresholdStart } = useControls(
@@ -409,44 +416,53 @@ export function MorphingTextDemo() {
         step: 0.01,
         label: "Threshold Start",
       },
-    }
+    },
+    { store }
   );
 
   // Shared middle point (enter end = exit start)
-  const { middleBlur, middleThreshold } = useControls("Word Filter.Middle", {
-    middleBlur: {
-      value: DEFAULT_WORD_BLUR_MIDDLE,
-      min: 0,
-      max: 30,
-      step: 1,
-      label: "Blur",
+  const { middleBlur, middleThreshold } = useControls(
+    "Word Filter.Middle",
+    {
+      middleBlur: {
+        value: DEFAULT_WORD_BLUR_MIDDLE,
+        min: 0,
+        max: 30,
+        step: 1,
+        label: "Blur",
+      },
+      middleThreshold: {
+        value: DEFAULT_WORD_THRESHOLD_MIDDLE,
+        min: 0,
+        max: 1,
+        step: 0.01,
+        label: "Threshold",
+      },
     },
-    middleThreshold: {
-      value: DEFAULT_WORD_THRESHOLD_MIDDLE,
-      min: 0,
-      max: 1,
-      step: 0.01,
-      label: "Threshold",
-    },
-  });
+    { store }
+  );
 
   // Word Exit controls
-  const { exitBlurEnd, exitThresholdEnd } = useControls("Word Filter.Exit", {
-    exitBlurEnd: {
-      value: DEFAULT_WORD_EXIT_BLUR_END,
-      min: 0,
-      max: 30,
-      step: 1,
-      label: "Blur End",
+  const { exitBlurEnd, exitThresholdEnd } = useControls(
+    "Word Filter.Exit",
+    {
+      exitBlurEnd: {
+        value: DEFAULT_WORD_EXIT_BLUR_END,
+        min: 0,
+        max: 30,
+        step: 1,
+        label: "Blur End",
+      },
+      exitThresholdEnd: {
+        value: DEFAULT_WORD_EXIT_THRESHOLD_END,
+        min: 0,
+        max: 1,
+        step: 0.01,
+        label: "Threshold End",
+      },
     },
-    exitThresholdEnd: {
-      value: DEFAULT_WORD_EXIT_THRESHOLD_END,
-      min: 0,
-      max: 1,
-      step: 0.01,
-      label: "Threshold End",
-    },
-  });
+    { store }
+  );
 
   // Container filter controls
   const {
@@ -457,75 +473,83 @@ export function MorphingTextDemo() {
     containerThresholdStart,
     containerThresholdPeak,
     containerThresholdEnd,
-  } = useControls("Container Filter", {
-    containerFilterEnabled: { value: true, label: "Enabled" },
-    containerBlurStart: {
-      value: DEFAULT_CONTAINER_BLUR_START,
-      min: 0,
-      max: 30,
-      step: 1,
-    },
-    containerBlurPeak: {
-      value: DEFAULT_CONTAINER_BLUR_PEAK,
-      min: 0,
-      max: 30,
-      step: 1,
-    },
-    containerBlurEnd: {
-      value: DEFAULT_CONTAINER_BLUR_END,
-      min: 0,
-      max: 30,
-      step: 1,
-    },
-    containerThresholdStart: {
-      value: DEFAULT_CONTAINER_THRESHOLD_START,
-      min: 0,
-      max: 1,
-      step: 0.01,
-    },
-    containerThresholdPeak: {
-      value: DEFAULT_CONTAINER_THRESHOLD_PEAK,
-      min: 0,
-      max: 1,
-      step: 0.01,
-    },
-    containerThresholdEnd: {
-      value: DEFAULT_CONTAINER_THRESHOLD_END,
-      min: 0,
-      max: 1,
-      step: 0.01,
-    },
-  });
-
-  // Timing controls
-  const { wordDuration, containerDuration, cycleInterval, stagger } =
-    useControls("Timing", {
-      cycleInterval: {
-        value: DEFAULT_CYCLE_INTERVAL,
-        min: 0.5,
-        max: 4,
-        step: 0.1,
+  } = useControls(
+    "Container Filter",
+    {
+      containerFilterEnabled: { value: true, label: "Enabled" },
+      containerBlurStart: {
+        value: DEFAULT_CONTAINER_BLUR_START,
+        min: 0,
+        max: 30,
+        step: 1,
       },
-      wordDuration: {
-        value: DEFAULT_WORD_DURATION,
-        min: 0.1,
-        max: 4,
-        step: 0.1,
+      containerBlurPeak: {
+        value: DEFAULT_CONTAINER_BLUR_PEAK,
+        min: 0,
+        max: 30,
+        step: 1,
       },
-      containerDuration: {
-        value: DEFAULT_CONTAINER_DURATION,
-        min: 0.1,
-        max: 4,
-        step: 0.1,
+      containerBlurEnd: {
+        value: DEFAULT_CONTAINER_BLUR_END,
+        min: 0,
+        max: 30,
+        step: 1,
       },
-      stagger: {
-        value: DEFAULT_STAGGER,
+      containerThresholdStart: {
+        value: DEFAULT_CONTAINER_THRESHOLD_START,
         min: 0,
         max: 1,
         step: 0.01,
-        label: "Stagger",
       },
-    });
+      containerThresholdPeak: {
+        value: DEFAULT_CONTAINER_THRESHOLD_PEAK,
+        min: 0,
+        max: 1,
+        step: 0.01,
+      },
+      containerThresholdEnd: {
+        value: DEFAULT_CONTAINER_THRESHOLD_END,
+        min: 0,
+        max: 1,
+        step: 0.01,
+      },
+    },
+    { store }
+  );
+
+  // Timing controls
+  const { wordDuration, containerDuration, cycleInterval, stagger } =
+    useControls(
+      "Timing",
+      {
+        cycleInterval: {
+          value: DEFAULT_CYCLE_INTERVAL,
+          min: 0.5,
+          max: 4,
+          step: 0.1,
+        },
+        wordDuration: {
+          value: DEFAULT_WORD_DURATION,
+          min: 0.1,
+          max: 4,
+          step: 0.1,
+        },
+        containerDuration: {
+          value: DEFAULT_CONTAINER_DURATION,
+          min: 0.1,
+          max: 4,
+          step: 0.1,
+        },
+        stagger: {
+          value: DEFAULT_STAGGER,
+          min: 0,
+          max: 1,
+          step: 0.01,
+          label: "Stagger",
+        },
+      },
+      { store }
+    );
 
   // Color controls
   const {
@@ -534,13 +558,17 @@ export function MorphingTextDemo() {
     colorLayer3,
     colorLayer4,
     colorBackground,
-  } = useControls("Colors", {
-    colorLayer1: { value: DEFAULT_COLOR_LAYER_1, label: "Layer 1" },
-    colorLayer2: { value: DEFAULT_COLOR_LAYER_2, label: "Layer 2" },
-    colorLayer3: { value: DEFAULT_COLOR_LAYER_3, label: "Layer 3" },
-    colorLayer4: { value: DEFAULT_COLOR_LAYER_4, label: "Layer 4" },
-    colorBackground: { value: DEFAULT_COLOR_BACKGROUND, label: "Background" },
-  });
+  } = useControls(
+    "Colors",
+    {
+      colorLayer1: { value: DEFAULT_COLOR_LAYER_1, label: "Layer 1" },
+      colorLayer2: { value: DEFAULT_COLOR_LAYER_2, label: "Layer 2" },
+      colorLayer3: { value: DEFAULT_COLOR_LAYER_3, label: "Layer 3" },
+      colorLayer4: { value: DEFAULT_COLOR_LAYER_4, label: "Layer 4" },
+      colorBackground: { value: DEFAULT_COLOR_BACKGROUND, label: "Background" },
+    },
+    { store }
+  );
 
   const sharedProps = {
     wordFilterEnabled,
@@ -568,6 +596,7 @@ export function MorphingTextDemo() {
       style={{ backgroundColor: colorBackground }}
     >
       <Leva
+        store={store}
         titleBar={{ title: "Morphing Text" }}
         theme={{ sizes: { rootWidth: "400px" } }}
         collapsed
