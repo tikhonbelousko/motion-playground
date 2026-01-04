@@ -3,8 +3,10 @@ import { UseMeasurePlaygroud } from "./components/01-transcription-sheet/UseMeas
 import { LayoutIdPlayground } from "./components/01-transcription-sheet/LayoutIdPlayground";
 import { InkbleedPlayground } from "./components/02-inkbleed/InkbleedPlayground";
 import { WordCyclePlayground } from "./components/03-word-cycle/WordCyclePlayground";
+import { LineByLinePlayground } from "./components/04-line-by-line/LineByLinePlayground";
 
 const demos = [
+  { id: "line-by-line", name: "Line by Line", component: LineByLinePlayground },
   { id: "word-cycle", name: "Word Cycle", component: WordCyclePlayground },
   { id: "inkbleed", name: "Inkbleed", component: InkbleedPlayground },
   {
@@ -49,10 +51,10 @@ function App() {
         ))}
         {/* Redirect root and 404 to first demo */}
         <Route path="/">
-          <Redirect to={`/${demos[0].id}`} />
+          <Redirect to={`/${demos[demos.length - 1].id}`} />
         </Route>
         <Route>
-          <Redirect to={`/${demos[0].id}`} />
+          <Redirect to={`/${demos[demos.length - 1].id}`} />
         </Route>
       </Switch>
     </>
