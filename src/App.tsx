@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { Route, Switch, Redirect, useLocation } from "wouter";
 import { UseMeasurePlaygroud } from "./components/01-transcription-sheet/UseMeasurePlaygroud";
 import { LayoutIdPlayground } from "./components/01-transcription-sheet/LayoutIdPlayground";
 import { InkbleedPlayground } from "./components/02-inkbleed/InkbleedPlayground";
@@ -15,28 +15,46 @@ const demos = [
   { id: "layout-id", name: "Layout ID", component: LayoutIdPlayground },
 ];
 
-type DemoId = (typeof demos)[number]["id"];
-
-function App() {
-  const [activeDemo, setActiveDemo] = useState<DemoId>("word-cycle");
-  const ActiveComponent =
-    demos.find((d) => d.id === activeDemo)?.component ?? demos[0].component;
+function DemoNav() {
+  const [location, setLocation] = useLocation();
+  const currentDemo = location.replace("/", "") || demos[0].id;
 
   return (
+    <div className="fixed top-4 left-4 z-50">
+      <select
+        value={currentDemo}
+        onChange={(e) => setLocation(`/${e.target.value}`)}
+      >
+        {demos.map((demo) => (
+          <option key={demo.id} value={demo.id}>
+            {demo.name}
+          </option>
+        ))}
+      </select>
+    </div>
+  );
+}
+
+function App() {
+  return (
     <>
-      <div className="fixed top-4 left-4 z-50">
-        <select
-          value={activeDemo}
-          onChange={(e) => setActiveDemo(e.target.value as DemoId)}
-        >
-          {demos.map((demo) => (
-            <option key={demo.id} value={demo.id}>
-              {demo.name}
-            </option>
-          ))}
-        </select>
-      </div>
-      <ActiveComponent />
+      <DemoNav />
+      <Switch>
+        {demos.map((demo) => (
+          <Route
+            key={demo.id}
+            path={`/${demo.id}`}
+            component={demo.component}
+          />
+        ))}
+        {/* Redirect root and 404 to first demo */}
+        <Route path="/">
+          <Redirect to={`/${demos[0].id}`} />
+        </Route>
+        <Route>
+          <Redirect to={`/${demos[0].id}`} />
+        </Route>
+      </Switch>
     </>
   );
 }
