@@ -27,18 +27,18 @@ type AnimateBy = "line" | "word";
 
 // Animation presets
 const ANIMATION_PRESETS = {
-  default: {
-    animateBy: "line" as AnimateBy,
-    staggerDelay: 0.05,
-    duration: 0.2,
-    durationDecay: 1,
-    layerStagger: 0.05,
-  },
   typewriter: {
     animateBy: "word" as AnimateBy,
     staggerDelay: 0.01,
     duration: 0.1,
     durationDecay: 0.9,
+    layerStagger: 0.05,
+  },
+  cascade: {
+    animateBy: "line" as AnimateBy,
+    staggerDelay: 0.05,
+    duration: 0.2,
+    durationDecay: 1,
     layerStagger: 0.05,
   },
 };
@@ -170,7 +170,7 @@ export function LineByLinePlayground() {
     setAnimation,
   ] = useControls(() => ({
     animationPreset: {
-      value: "default" as AnimationPresetName,
+      value: "typewriter" as AnimationPresetName,
       options: Object.keys(ANIMATION_PRESETS) as AnimationPresetName[],
       label: "Preset",
       onChange: (value: AnimationPresetName) => {
@@ -190,33 +190,33 @@ export function LineByLinePlayground() {
       label: "Text",
     },
     animateBy: {
-      value: ANIMATION_PRESETS.default.animateBy,
+      value: ANIMATION_PRESETS.typewriter.animateBy,
       options: ["line", "word"] as AnimateBy[],
       label: "Animate By",
     },
     staggerDelay: {
-      value: ANIMATION_PRESETS.default.staggerDelay,
+      value: ANIMATION_PRESETS.typewriter.staggerDelay,
       min: 0.01,
       max: 0.5,
       step: 0.01,
       label: "Stagger",
     },
     duration: {
-      value: ANIMATION_PRESETS.default.duration,
+      value: ANIMATION_PRESETS.typewriter.duration,
       min: 0,
       max: 2,
       step: 0.01,
       label: "Duration",
     },
     durationDecay: {
-      value: ANIMATION_PRESETS.default.durationDecay,
+      value: ANIMATION_PRESETS.typewriter.durationDecay,
       min: 0.3,
       max: 1,
       step: 0.05,
       label: "Duration Decay",
     },
     layerStagger: {
-      value: ANIMATION_PRESETS.default.layerStagger,
+      value: ANIMATION_PRESETS.typewriter.layerStagger,
       min: 0,
       max: 1,
       step: 0.01,
