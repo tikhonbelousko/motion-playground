@@ -8,32 +8,29 @@ import {
 } from "motion/react";
 import { useControls, Leva } from "leva";
 
-const CYCLING_WORDS = [
-  "The AI notepad for people in back-to-back meetings",
-  "",
-];
+const CYCLING_WORDS = ["Dream.", "Build.", "Ship.", "Repeat."];
 
 // Word Filter defaults
-const DEFAULT_WORD_ENTER_BLUR_START = 5;
+const DEFAULT_WORD_ENTER_BLUR_START = 7;
 const DEFAULT_WORD_ENTER_THRESHOLD_START = 1;
 const DEFAULT_WORD_BLUR_MIDDLE = 0; // shared: enter end & exit start
 const DEFAULT_WORD_THRESHOLD_MIDDLE = 0; // shared: enter end & exit start
-const DEFAULT_WORD_EXIT_BLUR_END = 8;
+const DEFAULT_WORD_EXIT_BLUR_END = 10;
 const DEFAULT_WORD_EXIT_THRESHOLD_END = 1;
 
 // Container Filter defaults
-const DEFAULT_CONTAINER_BLUR_START = 0;
-const DEFAULT_CONTAINER_BLUR_PEAK = 0;
-const DEFAULT_CONTAINER_BLUR_END = 0;
+const DEFAULT_CONTAINER_BLUR_START = 2;
+const DEFAULT_CONTAINER_BLUR_PEAK = 8;
+const DEFAULT_CONTAINER_BLUR_END = 2;
 const DEFAULT_CONTAINER_THRESHOLD_START = 0.1;
-const DEFAULT_CONTAINER_THRESHOLD_PEAK = 0.1;
+const DEFAULT_CONTAINER_THRESHOLD_PEAK = 0.4;
 const DEFAULT_CONTAINER_THRESHOLD_END = 0.1;
 
 // Timing defaults (all in seconds)
 const DEFAULT_CYCLE_INTERVAL = 2;
 const DEFAULT_WORD_DURATION = 1.8;
 const DEFAULT_CONTAINER_DURATION = 1.4;
-const DEFAULT_STAGGER = 0.1;
+const DEFAULT_STAGGER = 0.05;
 
 // Layer colors
 const DEFAULT_COLOR_LAYER_1 = "#a793dc";
@@ -326,10 +323,7 @@ function WordCycleLayer({
   if (!started) return null;
 
   return (
-    <div
-      className="w-full h-full px-[100px]"
-      style={{ gridArea: "1/1", "--font-serif": '"Quadrant Text 201218"' }}
-    >
+    <div className="w-full h-full" style={{ gridArea: "1/1" }}>
       {/* Container SVG Filter - blends the two words together */}
       {containerFilterEnabled && (
         <svg width="0" height="0" style={{ position: "absolute" }}>
@@ -361,7 +355,7 @@ function WordCycleLayer({
       )}
 
       <div
-        className="w-full text-center font-serif text-[140px] leading-[120px] tracking-tight relative"
+        className="w-full h-40 text-center font-serif font-light text-[200px] tracking-tighter relative"
         style={
           containerFilterEnabled
             ? { filter: `url(#${containerFilterId})` }
