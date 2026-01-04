@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "motion/react";
 import { useState } from "react";
 
-export function LayoutIdDemo() {
+export function ShadowDistortionDemo() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (
@@ -48,3 +48,4 @@ export function LayoutIdDemo() {
     </div>
   );
 }
+

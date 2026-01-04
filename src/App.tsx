@@ -1,9 +1,9 @@
 import { Route, Switch, Redirect, useLocation } from "wouter";
-import { UseMeasureDemo } from "./components/01-transcription-sheet/UseMeasureDemo";
-import { LayoutIdDemo } from "./components/01-transcription-sheet/LayoutIdDemo";
-import { InkbleedDemo } from "./components/02-inkbleed/InkbleedDemo";
-import { MorphingTextDemo } from "./components/03-morphing-text/MorphingTextDemo";
-import { StaggeredRevealDemo } from "./components/04-staggered-reveal/StaggeredRevealDemo";
+import { UseMeasureDemo } from "./components/02-transcription-sheet/UseMeasureDemo";
+import { ShadowDistortionDemo } from "./components/01-shadow-distortion/ShadowDistortionDemo";
+import { InkbleedDemo } from "./components/03-inkbleed/InkbleedDemo";
+import { MorphingTextDemo } from "./components/04-morphing-text/MorphingTextDemo";
+import { StaggeredRevealDemo } from "./components/05-staggered-reveal/StaggeredRevealDemo";
 
 const demos = [
   {
@@ -22,7 +22,11 @@ const demos = [
     name: "Transcription Sheet",
     component: UseMeasureDemo,
   },
-  { id: "layout-id", name: "Layout ID", component: LayoutIdDemo },
+  {
+    id: "shadow-distortion",
+    name: "Shadow Distortion",
+    component: ShadowDistortionDemo,
+  },
 ];
 
 function DemoNav() {
