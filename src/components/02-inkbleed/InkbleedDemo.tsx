@@ -1,6 +1,6 @@
 import { useControls } from "leva";
 
-export function InkbleedPlayground() {
+export function InkbleedDemo() {
   const { blur, threshold } = useControls({
     blur: { value: 3, min: 0, max: 20, step: 0.1 },
     threshold: { value: 0.25, min: 0, max: 1, step: 0.01 },

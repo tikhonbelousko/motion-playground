@@ -155,7 +155,7 @@ function TextLayer({
   );
 }
 
-export function StaggeredRevealPlayground() {
+export function StaggeredRevealDemo() {
   const [key, setKey] = useState(0);
 
   const [
@@ -312,3 +312,4 @@ export function StaggeredRevealPlayground() {
     </div>
   );
 }
+

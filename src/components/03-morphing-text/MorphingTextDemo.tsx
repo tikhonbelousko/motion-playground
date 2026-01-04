@@ -385,7 +385,7 @@ function WordCycleLayer({
   );
 }
 
-export function MorphingTextPlayground() {
+export function MorphingTextDemo() {
   // Word filter controls
   const { wordFilterEnabled } = useControls("Word Filter", {
     wordFilterEnabled: { value: true, label: "Enabled" },
@@ -593,3 +593,4 @@ export function MorphingTextPlayground() {
     </div>
   );
 }
+

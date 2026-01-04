@@ -43,7 +43,7 @@ const closeSpring: Transition = {
   restSpeed: 0.5,
 };
 
-export function UseMeasurePlaygroud() {
+export function UseMeasureDemo() {
   const [openIndex, setOpenIndex] = useState<number | null>(null);
   const [isTrancribing, setIsTrancribing] = useState(true);
 
@@ -54,7 +54,7 @@ export function UseMeasurePlaygroud() {
           <ExpandingPanel
             isOpen={openIndex === 0}
             onClick={() => {
-              setOpenIndex(i => (i === 0 ? null : 0));
+              setOpenIndex((i) => (i === 0 ? null : 0));
             }}
             isTrancribing={isTrancribing}
             setIsTrancribing={setIsTrancribing}

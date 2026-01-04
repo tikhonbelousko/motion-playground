@@ -1,7 +1,7 @@
 import { motion, AnimatePresence } from "motion/react";
 import { useState } from "react";
 
-export function LayoutIdPlayground() {
+export function LayoutIdDemo() {
   const [isOpen, setIsOpen] = useState(false);
 
   return (

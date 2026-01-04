@@ -1,20 +1,28 @@
 import { Route, Switch, Redirect, useLocation } from "wouter";
-import { UseMeasurePlaygroud } from "./components/01-transcription-sheet/UseMeasurePlaygroud";
-import { LayoutIdPlayground } from "./components/01-transcription-sheet/LayoutIdPlayground";
-import { InkbleedPlayground } from "./components/02-inkbleed/InkbleedPlayground";
-import { MorphingTextPlayground } from "./components/03-morphing-text/MorphingTextPlayground";
-import { StaggeredRevealPlayground } from "./components/04-staggered-reveal/StaggeredRevealPlayground";
+import { UseMeasureDemo } from "./components/01-transcription-sheet/UseMeasureDemo";
+import { LayoutIdDemo } from "./components/01-transcription-sheet/LayoutIdDemo";
+import { InkbleedDemo } from "./components/02-inkbleed/InkbleedDemo";
+import { MorphingTextDemo } from "./components/03-morphing-text/MorphingTextDemo";
+import { StaggeredRevealDemo } from "./components/04-staggered-reveal/StaggeredRevealDemo";
 
 const demos = [
-  { id: "staggered-reveal", name: "Staggered Reveal", component: StaggeredRevealPlayground },
-  { id: "morphing-text", name: "Morphing Text", component: MorphingTextPlayground },
-  { id: "inkbleed", name: "Inkbleed", component: InkbleedPlayground },
+  {
+    id: "staggered-reveal",
+    name: "Staggered Reveal",
+    component: StaggeredRevealDemo,
+  },
+  {
+    id: "morphing-text",
+    name: "Morphing Text",
+    component: MorphingTextDemo,
+  },
+  { id: "inkbleed", name: "Inkbleed", component: InkbleedDemo },
   {
     id: "use-measure",
     name: "Transcription Sheet",
-    component: UseMeasurePlaygroud,
+    component: UseMeasureDemo,
   },
-  { id: "layout-id", name: "Layout ID", component: LayoutIdPlayground },
+  { id: "layout-id", name: "Layout ID", component: LayoutIdDemo },
 ];
 
 function DemoNav() {
