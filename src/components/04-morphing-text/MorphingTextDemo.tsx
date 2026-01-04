@@ -6,7 +6,7 @@ import {
   animate,
   useIsPresent,
 } from "motion/react";
-import { useControls, Leva, useCreateStore } from "leva";
+import { useControls, LevaPanel, useCreateStore } from "leva";
 
 const CYCLING_WORDS = ["Dream.", "Build.", "Ship.", "Repeat."];
 
@@ -595,7 +595,7 @@ export function MorphingTextDemo() {
       className="w-screen h-screen select-none flex items-center justify-center"
       style={{ backgroundColor: colorBackground }}
     >
-      <Leva
+      <LevaPanel
         store={store}
         titleBar={{ title: "Morphing Text" }}
         theme={{ sizes: { rootWidth: "400px" } }}
@@ -622,4 +622,3 @@ export function MorphingTextDemo() {
     </div>
   );
 }
-

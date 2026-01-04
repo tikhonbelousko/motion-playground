@@ -7,31 +7,31 @@ import { StaggeredRevealDemo } from "./components/05-staggered-reveal/StaggeredR
 
 const demos = [
   {
-    id: "staggered-reveal",
-    name: "Staggered Reveal",
-    component: StaggeredRevealDemo,
+    id: "shadow-distortion",
+    name: "Shadow Distortion",
+    component: ShadowDistortionDemo,
   },
+  {
+    id: "transcription-sheet",
+    name: "Transcription Sheet",
+    component: UseMeasureDemo,
+  },
+  { id: "inkbleed", name: "Inkbleed", component: InkbleedDemo },
   {
     id: "morphing-text",
     name: "Morphing Text",
     component: MorphingTextDemo,
   },
-  { id: "inkbleed", name: "Inkbleed", component: InkbleedDemo },
   {
-    id: "use-measure",
-    name: "Transcription Sheet",
-    component: UseMeasureDemo,
-  },
-  {
-    id: "shadow-distortion",
-    name: "Shadow Distortion",
-    component: ShadowDistortionDemo,
+    id: "staggered-reveal",
+    name: "Staggered Reveal",
+    component: StaggeredRevealDemo,
   },
 ];
 
 function DemoNav() {
   const [location, setLocation] = useLocation();
-  const currentDemo = location.replace("/", "") || demos[0].id;
+  const currentDemo = location.replace("/", "") || demos[demos.length - 1].id;
 
   return (
     <div className="fixed top-4 left-4 z-50">
