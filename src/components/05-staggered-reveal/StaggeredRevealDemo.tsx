@@ -6,7 +6,7 @@ import { TEXTS } from "./texts";
 // Color presets
 const COLOR_PRESETS = {
   sunset: {
-    layer1: "#a793dc",
+    layer1: "#a473ff",
     layer2: "#febe29",
     layer3: "#ff8a0d",
     layer4: "#292929",
@@ -37,9 +37,9 @@ const ANIMATION_PRESETS = {
   cascade: {
     animateBy: "line" as AnimateBy,
     staggerDelay: 0.05,
-    duration: 0.2,
-    durationDecay: 1,
-    layerStagger: 0.05,
+    duration: 0.25,
+    durationDecay: 0.9,
+    layerStagger: 0.06,
   },
 };
 
@@ -170,7 +170,7 @@ export function StaggeredRevealDemo() {
     setAnimation,
   ] = useControls(() => ({
     animationPreset: {
-      value: "typewriter" as AnimationPresetName,
+      value: "cascade" as AnimationPresetName,
       options: Object.keys(ANIMATION_PRESETS) as AnimationPresetName[],
       label: "Preset",
       onChange: (value: AnimationPresetName) => {
@@ -190,33 +190,33 @@ export function StaggeredRevealDemo() {
       label: "Text",
     },
     animateBy: {
-      value: ANIMATION_PRESETS.typewriter.animateBy,
+      value: ANIMATION_PRESETS.cascade.animateBy,
       options: ["line", "word"] as AnimateBy[],
       label: "Animate By",
     },
     staggerDelay: {
-      value: ANIMATION_PRESETS.typewriter.staggerDelay,
+      value: ANIMATION_PRESETS.cascade.staggerDelay,
       min: 0.01,
       max: 0.5,
       step: 0.01,
       label: "Stagger",
     },
     duration: {
-      value: ANIMATION_PRESETS.typewriter.duration,
+      value: ANIMATION_PRESETS.cascade.duration,
       min: 0,
       max: 2,
       step: 0.01,
       label: "Duration",
     },
     durationDecay: {
-      value: ANIMATION_PRESETS.typewriter.durationDecay,
+      value: ANIMATION_PRESETS.cascade.durationDecay,
       min: 0.3,
       max: 1,
       step: 0.05,
       label: "Duration Decay",
     },
     layerStagger: {
-      value: ANIMATION_PRESETS.typewriter.layerStagger,
+      value: ANIMATION_PRESETS.cascade.layerStagger,
       min: 0,
       max: 1,
       step: 0.01,
@@ -312,4 +312,3 @@ export function StaggeredRevealDemo() {
     </div>
   );
 }
-
