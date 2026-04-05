@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import imgUrl from "../../assets/tikhonbelousko.png";
 
 interface SourceImage {
-  imageData: ImageData | null;
+  source: HTMLCanvasElement | null;
   width: number;
   height: number;
   loaded: boolean;
@@ -10,7 +10,7 @@ interface SourceImage {
 
 export function useSourceImage(): SourceImage {
   const [state, setState] = useState<SourceImage>({
-    imageData: null,
+    source: null,
     width: 0,
     height: 0,
     loaded: false,
@@ -32,13 +32,7 @@ export function useSourceImage(): SourceImage {
       canvas.height = h;
       const ctx = canvas.getContext("2d")!;
       ctx.drawImage(img, 0, 0, w, h);
-      const imageData = ctx.getImageData(0, 0, w, h);
-      setState({
-        imageData,
-        width: canvas.width,
-        height: canvas.height,
-        loaded: true,
-      });
+      setState({ source: canvas, width: w, height: h, loaded: true });
     };
   }, []);
 

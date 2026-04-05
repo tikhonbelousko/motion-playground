@@ -1,9 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useControls, folder, button } from "leva";
 import { useSourceImage } from "./useSourceImage";
-import { vortexFilter } from "./filters/vortexFilter";
-import { fieldBlur, type BlurPoint } from "./filters/fieldBlur";
-import { ditherFilter } from "./filters/ditherFilter";
+import { useWebGLPipeline, type BlurPoint } from "./useWebGLPipeline";
 
 const HANDLE_RADIUS = 8;
 const HIT_THRESHOLD = 15;
@@ -25,8 +23,9 @@ type DragTarget =
   | null;
 
 export function LiquifyDemo() {
-  const canvasRef = useRef<HTMLCanvasElement>(null);
-  const { imageData, width, height, loaded } = useSourceImage();
+  const glCanvasRef = useRef<HTMLCanvasElement>(null);
+  const overlayRef = useRef<HTMLCanvasElement>(null);
+  const { source, width, height, loaded } = useSourceImage();
 
   const [blurPoints, setBlurPoints] = useState<BlurPoint[]>([]);
   const [vortexCenter, setVortexCenter] = useState<{ x: number; y: number }>({
@@ -37,6 +36,13 @@ export function LiquifyDemo() {
   const [ditherSeed, setDitherSeed] = useState(42);
   const dragRef = useRef<DragTarget>(null);
   const rafId = useRef(0);
+
+  const { render: renderPipeline } = useWebGLPipeline(
+    glCanvasRef,
+    source,
+    width,
+    height,
+  );
 
   useEffect(() => {
     if (!loaded || initialized) return;
@@ -71,7 +77,6 @@ export function LiquifyDemo() {
       }),
     }), [minDim]);
 
-  // Dynamic Leva controls for blur point radii
   const pointRadii = useControls(
     "Blur Points",
     () => {
@@ -95,7 +100,6 @@ export function LiquifyDemo() {
     [blurPoints.length],
   );
 
-  // Sync Leva radius values back into blurPoints (only if a radius actually changed)
   useEffect(() => {
     setBlurPoints((prev) => {
       let changed = false;
@@ -112,37 +116,13 @@ export function LiquifyDemo() {
     });
   }, [pointRadii]);
 
-  // --- Rendering pipeline ---
-  const render = useCallback(() => {
-    if (!imageData || !canvasRef.current || !initialized) return;
-    const ctx = canvasRef.current.getContext("2d")!;
+  // --- Overlay rendering (handles + vortex ring) ---
+  const drawOverlay = useCallback(() => {
+    const canvas = overlayRef.current;
+    if (!canvas) return;
+    const ctx = canvas.getContext("2d")!;
+    ctx.clearRect(0, 0, width, height);
 
-    let current: ImageData = imageData;
-
-    if (fieldBlurEnabled && blurPoints.length >= 2) {
-      current = fieldBlur(current, blurPoints, blurIntensity);
-    }
-
-    if (vortexEnabled) {
-      current = vortexFilter(current, {
-        centerX: vortexCenter.x,
-        centerY: vortexCenter.y,
-        radius: vortexRadius,
-        angle: vortexAngle * DEG_TO_RAD,
-      });
-    }
-
-    if (ditherEnabled) {
-      current = ditherFilter(current, {
-        sharpness: ditherSharpness,
-        seed: ditherSeed,
-      });
-    }
-
-    ctx.putImageData(current, 0, 0);
-
-    // --- Overlays ---
-    // Blur point handles
     for (let i = 0; i < blurPoints.length; i++) {
       const pt = blurPoints[i];
       ctx.beginPath();
@@ -160,7 +140,6 @@ export function LiquifyDemo() {
       ctx.fillText(`${Math.round(pt.radius)}`, pt.x, pt.y);
     }
 
-    // Vortex center + radius ring
     if (vortexEnabled) {
       ctx.beginPath();
       ctx.arc(vortexCenter.x, vortexCenter.y, vortexRadius, 0, Math.PI * 2);
@@ -178,7 +157,6 @@ export function LiquifyDemo() {
       ctx.lineWidth = 1.5;
       ctx.stroke();
 
-      // Crosshair
       const ch = 12;
       ctx.beginPath();
       ctx.moveTo(vortexCenter.x - ch, vortexCenter.y);
@@ -189,9 +167,27 @@ export function LiquifyDemo() {
       ctx.lineWidth = 1;
       ctx.stroke();
     }
+  }, [blurPoints, vortexEnabled, vortexCenter, vortexRadius, width, height]);
+
+  // --- Combined render ---
+  const renderAll = useCallback(() => {
+    if (!initialized) return;
+    renderPipeline({
+      fieldBlurEnabled,
+      blurIntensity,
+      blurPoints,
+      vortexEnabled,
+      vortexCenter,
+      vortexRadius,
+      vortexAngle: vortexAngle * DEG_TO_RAD,
+      ditherEnabled,
+      ditherSharpness,
+      ditherSeed,
+    });
+    drawOverlay();
   }, [
-    imageData,
     initialized,
+    renderPipeline,
     fieldBlurEnabled,
     blurIntensity,
     blurPoints,
@@ -202,18 +198,19 @@ export function LiquifyDemo() {
     ditherEnabled,
     ditherSharpness,
     ditherSeed,
+    drawOverlay,
   ]);
 
   useEffect(() => {
     cancelAnimationFrame(rafId.current);
-    rafId.current = requestAnimationFrame(render);
+    rafId.current = requestAnimationFrame(renderAll);
     return () => cancelAnimationFrame(rafId.current);
-  }, [render]);
+  }, [renderAll]);
 
-  // --- Pointer interactions ---
+  // --- Pointer interactions (on the overlay canvas) ---
   const getCanvasPos = useCallback(
     (e: React.PointerEvent<HTMLCanvasElement>) => {
-      const rect = canvasRef.current!.getBoundingClientRect();
+      const rect = overlayRef.current!.getBoundingClientRect();
       const scaleX = width / rect.width;
       const scaleY = height / rect.height;
       return {
@@ -248,7 +245,7 @@ export function LiquifyDemo() {
         setVortexCenter({ x: Math.round(pos.x), y: Math.round(pos.y) });
       }
 
-      canvasRef.current?.setPointerCapture(e.pointerId);
+      overlayRef.current?.setPointerCapture(e.pointerId);
     },
     [getCanvasPos, findBlurHandle],
   );
@@ -280,7 +277,7 @@ export function LiquifyDemo() {
 
   const handleDoubleClick = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement>) => {
-      const rect = canvasRef.current!.getBoundingClientRect();
+      const rect = overlayRef.current!.getBoundingClientRect();
       const scaleX = width / rect.width;
       const scaleY = height / rect.height;
       const px = (e.clientX - rect.left) * scaleX;
@@ -299,7 +296,7 @@ export function LiquifyDemo() {
   const handleContextMenu = useCallback(
     (e: React.MouseEvent<HTMLCanvasElement>) => {
       e.preventDefault();
-      const rect = canvasRef.current!.getBoundingClientRect();
+      const rect = overlayRef.current!.getBoundingClientRect();
       const scaleX = width / rect.width;
       const scaleY = height / rect.height;
       const px = (e.clientX - rect.left) * scaleX;
@@ -323,18 +320,26 @@ export function LiquifyDemo() {
 
   return (
     <div className="flex h-screen w-screen items-center justify-center bg-white">
-      <canvas
-        ref={canvasRef}
-        width={width}
-        height={height}
-        className="max-h-full max-w-full object-contain"
-        style={{ cursor: "crosshair" }}
-        onPointerDown={handlePointerDown}
-        onPointerMove={handlePointerMove}
-        onPointerUp={handlePointerUp}
-        onDoubleClick={handleDoubleClick}
-        onContextMenu={handleContextMenu}
-      />
+      <div className="relative">
+        <canvas
+          ref={glCanvasRef}
+          width={width}
+          height={height}
+          className="block max-h-screen max-w-screen"
+        />
+        <canvas
+          ref={overlayRef}
+          width={width}
+          height={height}
+          className="absolute inset-0"
+          style={{ cursor: "crosshair", width: "100%", height: "100%" }}
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onDoubleClick={handleDoubleClick}
+          onContextMenu={handleContextMenu}
+        />
+      </div>
     </div>
   );
 }
