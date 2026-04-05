@@ -3,7 +3,6 @@ import { useControls, folder, button } from "leva";
 import { useSourceImage } from "./useSourceImage";
 import { vortexFilter } from "./filters/vortexFilter";
 import { fieldBlur, type BlurPoint } from "./filters/fieldBlur";
-import { dissolveBlend } from "./filters/dissolveBlend";
 
 const HANDLE_RADIUS = 8;
 const HIT_THRESHOLD = 15;
@@ -46,7 +45,7 @@ export function LiquifyDemo() {
 
   const minDim = Math.min(width || 400, height || 400);
 
-  const [{ fieldBlurEnabled, vortexEnabled, dissolveEnabled, vortexAngle, vortexRadius, dissolveOpacity, dissolveMode, dissolveSeed }] =
+  const [{ fieldBlurEnabled, vortexEnabled, vortexAngle, vortexRadius }] =
     useControls(() => ({
       "Field Blur": folder({
         fieldBlurEnabled: { value: true, label: "Enabled" },
@@ -61,16 +60,6 @@ export function LiquifyDemo() {
           step: 1,
           label: "Radius",
         },
-      }),
-      Dissolve: folder({
-        dissolveEnabled: { value: true, label: "Enabled" },
-        dissolveOpacity: { value: 100, min: 0, max: 100, step: 1, label: "Opacity %" },
-        dissolveMode: {
-          value: "Blend with original" as string,
-          options: ["Blend with original", "Transparent"],
-          label: "Mode",
-        },
-        dissolveSeed: { value: 0, min: 0, max: 9999, step: 1, label: "Seed" },
       }),
     }), [minDim]);
 
@@ -135,14 +124,6 @@ export function LiquifyDemo() {
       });
     }
 
-    if (dissolveEnabled) {
-      current = dissolveBlend(imageData, current, {
-        opacity: dissolveOpacity / 100,
-        mode: dissolveMode === "Transparent" ? "transparent" : "blend",
-        seed: dissolveSeed,
-      });
-    }
-
     ctx.putImageData(current, 0, 0);
 
     // --- Overlays ---
@@ -202,10 +183,6 @@ export function LiquifyDemo() {
     vortexCenter,
     vortexRadius,
     vortexAngle,
-    dissolveEnabled,
-    dissolveOpacity,
-    dissolveMode,
-    dissolveSeed,
   ]);
 
   useEffect(() => {
