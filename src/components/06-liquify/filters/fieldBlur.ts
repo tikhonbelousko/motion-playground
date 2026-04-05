@@ -4,7 +4,7 @@ export interface BlurPoint {
   radius: number;
 }
 
-const STACK_RADII = [0, 1, 2, 4, 6, 8, 12, 16, 24, 32];
+const STACK_RADII = [0, 1, 2, 4, 6, 8, 12, 16, 24, 32, 40, 50];
 
 /**
  * Single-pass horizontal box blur into `out` from `src`.
@@ -132,16 +132,17 @@ function buildBlurStack(
 export function fieldBlur(
   source: ImageData,
   points: BlurPoint[],
+  intensity: number = 1,
 ): ImageData {
   const { width: w, height: h } = source;
   const stack = buildBlurStack(source.data, w, h);
   const out = new Uint8ClampedArray(source.data.length);
 
   const epsilon = 1;
+  const maxR = STACK_RADII[STACK_RADII.length - 1];
 
   for (let y = 0; y < h; y++) {
     for (let x = 0; x < w; x++) {
-      // Inverse-distance-weighted radius
       let wSum = 0;
       let rSum = 0;
       for (let i = 0; i < points.length; i++) {
@@ -152,7 +153,7 @@ export function fieldBlur(
         wSum += weight;
         rSum += weight * points[i].radius;
       }
-      const effR = rSum / wSum;
+      const effR = Math.min((rSum / wSum) * intensity, maxR);
 
       // Find bracketing stack levels and lerp
       let lo = 0;

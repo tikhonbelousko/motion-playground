@@ -47,10 +47,11 @@ export function LiquifyDemo() {
 
   const minDim = Math.min(width || 400, height || 400);
 
-  const [{ fieldBlurEnabled, vortexEnabled, vortexAngle, vortexRadius, ditherEnabled, ditherThreshold }] =
+  const [{ fieldBlurEnabled, blurIntensity, vortexEnabled, vortexAngle, vortexRadius, ditherEnabled, ditherSharpness }] =
     useControls(() => ({
       "Field Blur": folder({
         fieldBlurEnabled: { value: true, label: "Enabled" },
+        blurIntensity: { value: 1, min: 0, max: 5, step: 0.1, label: "Intensity" },
       }),
       Vortex: folder({
         vortexEnabled: { value: true, label: "Enabled" },
@@ -65,7 +66,7 @@ export function LiquifyDemo() {
       }),
       Dither: folder({
         ditherEnabled: { value: false, label: "Enabled" },
-        ditherThreshold: { value: 50, min: 0, max: 100, step: 1, label: "Light/Dark Balance" },
+        ditherSharpness: { value: 0, min: 0, max: 100, step: 1, label: "Sharpness" },
         Reseed: button(() => setDitherSeed((Date.now() * Math.random()) | 0)),
       }),
     }), [minDim]);
@@ -80,7 +81,7 @@ export function LiquifyDemo() {
         schema[`Point ${i + 1} radius`] = {
           value: blurPoints[i].radius,
           min: 0,
-          max: 32,
+          max: 50,
           step: 0.5,
         };
       }
@@ -119,7 +120,7 @@ export function LiquifyDemo() {
     let current: ImageData = imageData;
 
     if (fieldBlurEnabled && blurPoints.length >= 2) {
-      current = fieldBlur(current, blurPoints);
+      current = fieldBlur(current, blurPoints, blurIntensity);
     }
 
     if (vortexEnabled) {
@@ -133,7 +134,7 @@ export function LiquifyDemo() {
 
     if (ditherEnabled) {
       current = ditherFilter(current, {
-        threshold: ditherThreshold,
+        sharpness: ditherSharpness,
         seed: ditherSeed,
       });
     }
@@ -192,13 +193,14 @@ export function LiquifyDemo() {
     imageData,
     initialized,
     fieldBlurEnabled,
+    blurIntensity,
     blurPoints,
     vortexEnabled,
     vortexCenter,
     vortexRadius,
     vortexAngle,
     ditherEnabled,
-    ditherThreshold,
+    ditherSharpness,
     ditherSeed,
   ]);
 

@@ -1,6 +1,6 @@
 export interface DitherParams {
-  /** 0-100: lower = more pixels survive (lighter), higher = more knocked out (darker) */
-  threshold: number;
+  /** 0 = max noise (linear probability), 100 = sharp edges (step function) */
+  sharpness: number;
   /** Seed for the PRNG — deterministic per value, reseed via button */
   seed: number;
 }
@@ -16,6 +16,17 @@ function mulberry32(seed: number): () => number {
   };
 }
 
+/**
+ * Attempt: attempt a symmetric gain curve that pushes values toward 0 or 1.
+ * k=1 → linear, k>1 → steeper S-curve.
+ */
+function gain(t: number, k: number): number {
+  if (t < 0.5) {
+    return 0.5 * Math.pow(2 * t, k);
+  }
+  return 1 - 0.5 * Math.pow(2 * (1 - t), k);
+}
+
 export function ditherFilter(
   source: ImageData,
   params: DitherParams,
@@ -25,11 +36,11 @@ export function ditherFilter(
   const out = new Uint8ClampedArray(src.length);
 
   const rand = mulberry32(params.seed);
-  const bias = (params.threshold - 50) / 50;
+  const k = 1 + (params.sharpness / 100) * 19;
 
   for (let i = 0; i < src.length; i += 4) {
     const alpha = src[i + 3] / 255;
-    const probability = Math.max(0, Math.min(1, alpha - bias));
+    const probability = gain(alpha, k);
     const survive = rand() < probability;
 
     out[i] = src[i];
