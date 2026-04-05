@@ -3,6 +3,7 @@ import { useControls, folder, button } from "leva";
 import { useSourceImage } from "./useSourceImage";
 import { vortexFilter } from "./filters/vortexFilter";
 import { fieldBlur, type BlurPoint } from "./filters/fieldBlur";
+import { ditherFilter } from "./filters/ditherFilter";
 
 const HANDLE_RADIUS = 8;
 const HIT_THRESHOLD = 15;
@@ -33,6 +34,7 @@ export function LiquifyDemo() {
     y: 0,
   });
   const [initialized, setInitialized] = useState(false);
+  const [ditherSeed, setDitherSeed] = useState(42);
   const dragRef = useRef<DragTarget>(null);
   const rafId = useRef(0);
 
@@ -45,7 +47,7 @@ export function LiquifyDemo() {
 
   const minDim = Math.min(width || 400, height || 400);
 
-  const [{ fieldBlurEnabled, vortexEnabled, vortexAngle, vortexRadius }] =
+  const [{ fieldBlurEnabled, vortexEnabled, vortexAngle, vortexRadius, ditherEnabled, ditherThreshold }] =
     useControls(() => ({
       "Field Blur": folder({
         fieldBlurEnabled: { value: true, label: "Enabled" },
@@ -60,6 +62,11 @@ export function LiquifyDemo() {
           step: 1,
           label: "Radius",
         },
+      }),
+      Dither: folder({
+        ditherEnabled: { value: false, label: "Enabled" },
+        ditherThreshold: { value: 50, min: 0, max: 100, step: 1, label: "Light/Dark Balance" },
+        Reseed: button(() => setDitherSeed((Date.now() * Math.random()) | 0)),
       }),
     }), [minDim]);
 
@@ -124,6 +131,13 @@ export function LiquifyDemo() {
       });
     }
 
+    if (ditherEnabled) {
+      current = ditherFilter(current, {
+        threshold: ditherThreshold,
+        seed: ditherSeed,
+      });
+    }
+
     ctx.putImageData(current, 0, 0);
 
     // --- Overlays ---
@@ -183,6 +197,9 @@ export function LiquifyDemo() {
     vortexCenter,
     vortexRadius,
     vortexAngle,
+    ditherEnabled,
+    ditherThreshold,
+    ditherSeed,
   ]);
 
   useEffect(() => {
