@@ -4,6 +4,7 @@ import { ShadowDistortionDemo } from "./components/01-shadow-distortion/ShadowDi
 import { InkbleedDemo } from "./components/03-inkbleed/InkbleedDemo";
 import { MorphingTextDemo } from "./components/04-morphing-text/MorphingTextDemo";
 import { StaggeredRevealDemo } from "./components/05-staggered-reveal/StaggeredRevealDemo";
+import { LiquifyDemo } from "./components/06-liquify/LiquifyDemo";
 
 const demos = [
   {
@@ -26,6 +27,11 @@ const demos = [
     id: "staggered-reveal",
     name: "Staggered Reveal",
     component: StaggeredRevealDemo,
+  },
+  {
+    id: "liquify",
+    name: "Liquify",
+    component: LiquifyDemo,
   },
 ];
 
