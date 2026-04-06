@@ -14,14 +14,19 @@ export interface BlurPoint {
   radius: number;
 }
 
+export interface Vortex {
+  x: number;
+  y: number;
+  radius: number;
+  angle: number;
+}
+
 export interface PipelineParams {
   fieldBlurEnabled: boolean;
   blurIntensity: number;
   blurPoints: BlurPoint[];
   vortexEnabled: boolean;
-  vortexCenter: { x: number; y: number };
-  vortexRadius: number;
-  vortexAngle: number;
+  vortices: Vortex[];
   ditherEnabled: boolean;
   ditherSharpness: number;
   ditherSeed: number;
@@ -159,15 +164,26 @@ export function useWebGLPipeline(
         });
       }
 
-      if (params.vortexEnabled) {
+      if (params.vortexEnabled && params.vortices.length > 0) {
+        const count = Math.min(params.vortices.length, 8);
+        const centers = new Float32Array(8 * 2);
+        const radii = new Float32Array(8);
+        const angles = new Float32Array(8);
+        for (let i = 0; i < count; i++) {
+          centers[i * 2] = params.vortices[i].x;
+          centers[i * 2 + 1] = h - params.vortices[i].y;
+          radii[i] = params.vortices[i].radius;
+          angles[i] = params.vortices[i].angle;
+        }
         passes.push({
           prog: p.vortexProg,
           uniforms: {
             u_source: null as unknown,
             u_resolution: [w, h],
-            u_vortexCenter: [params.vortexCenter.x, h - params.vortexCenter.y],
-            u_vortexRadius: params.vortexRadius,
-            u_vortexAngle: params.vortexAngle,
+            u_vortexCount: count,
+            u_vortexCenters: centers,
+            u_vortexRadii: radii,
+            u_vortexAngles: angles,
           },
         });
       }

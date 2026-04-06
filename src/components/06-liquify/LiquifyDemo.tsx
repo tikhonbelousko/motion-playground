@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useControls, folder, button } from "leva";
 import { useSourceImage } from "./useSourceImage";
-import { useWebGLPipeline, type BlurPoint } from "./useWebGLPipeline";
+import { useWebGLPipeline, type BlurPoint, type Vortex } from "./useWebGLPipeline";
 
 const HANDLE_RADIUS = 8;
 const HIT_THRESHOLD = 15;
@@ -18,7 +18,7 @@ function makeDefaultBlurPoints(w: number, h: number): BlurPoint[] {
 }
 
 type DragTarget =
-  | { kind: "vortex" }
+  | { kind: "vortex"; index: number }
   | { kind: "blur"; index: number }
   | null;
 
@@ -28,10 +28,7 @@ export function LiquifyDemo() {
   const { source, width, height, loaded } = useSourceImage();
 
   const [blurPoints, setBlurPoints] = useState<BlurPoint[]>([]);
-  const [vortexCenter, setVortexCenter] = useState<{ x: number; y: number }>({
-    x: 0,
-    y: 0,
-  });
+  const [vortexCenters, setVortexCenters] = useState<Array<{ x: number; y: number }>>([]);
   const [initialized, setInitialized] = useState(false);
   const [ditherSeed, setDitherSeed] = useState(42);
   const dragRef = useRef<DragTarget>(null);
@@ -47,13 +44,16 @@ export function LiquifyDemo() {
   useEffect(() => {
     if (!loaded || initialized) return;
     setBlurPoints(makeDefaultBlurPoints(width, height));
-    setVortexCenter({ x: Math.round(width / 2), y: Math.round(height / 2) });
+    setVortexCenters([
+      { x: Math.round(width / 3), y: Math.round(height / 2) },
+      { x: Math.round((width * 2) / 3), y: Math.round(height / 2) },
+    ]);
     setInitialized(true);
   }, [loaded, initialized, width, height]);
 
   const minDim = Math.min(width || 400, height || 400);
 
-  const [{ fieldBlurEnabled, blurIntensity, vortexEnabled, vortexAngle, vortexRadius, ditherEnabled, ditherSharpness }] =
+  const [{ fieldBlurEnabled, blurIntensity, vortexEnabled, v1Angle, v1Radius, v2Angle, v2Radius, ditherEnabled, ditherSharpness }] =
     useControls(() => ({
       "Field Blur": folder({
         fieldBlurEnabled: { value: true, label: "Enabled" },
@@ -61,14 +61,26 @@ export function LiquifyDemo() {
       }),
       Vortex: folder({
         vortexEnabled: { value: true, label: "Enabled" },
-        vortexAngle: { value: 180, min: -720, max: 720, step: 1, label: "Angle (deg)" },
-        vortexRadius: {
-          value: Math.round(minDim * 0.5),
-          min: 20,
-          max: minDim || 400,
-          step: 1,
-          label: "Radius",
-        },
+        "Vortex 1": folder({
+          v1Angle: { value: 180, min: -720, max: 720, step: 1, label: "Angle (deg)" },
+          v1Radius: {
+            value: Math.round(minDim * 0.35),
+            min: 20,
+            max: minDim || 400,
+            step: 1,
+            label: "Radius",
+          },
+        }),
+        "Vortex 2": folder({
+          v2Angle: { value: -180, min: -720, max: 720, step: 1, label: "Angle (deg)" },
+          v2Radius: {
+            value: Math.round(minDim * 0.35),
+            min: 20,
+            max: minDim || 400,
+            step: 1,
+            label: "Radius",
+          },
+        }),
       }),
       Dither: folder({
         ditherEnabled: { value: false, label: "Enabled" },
@@ -141,45 +153,64 @@ export function LiquifyDemo() {
     }
 
     if (vortexEnabled) {
-      ctx.beginPath();
-      ctx.arc(vortexCenter.x, vortexCenter.y, vortexRadius, 0, Math.PI * 2);
-      ctx.strokeStyle = "rgba(100, 180, 255, 0.5)";
-      ctx.lineWidth = 1.5;
-      ctx.setLineDash([6, 4]);
-      ctx.stroke();
-      ctx.setLineDash([]);
+      const perVortexRadius = [v1Radius, v2Radius];
+      for (let vi = 0; vi < vortexCenters.length; vi++) {
+        const vc = vortexCenters[vi];
+        const r = perVortexRadius[vi] ?? perVortexRadius[0];
 
-      ctx.beginPath();
-      ctx.arc(vortexCenter.x, vortexCenter.y, 6, 0, Math.PI * 2);
-      ctx.fillStyle = "rgba(100, 180, 255, 0.8)";
-      ctx.fill();
-      ctx.strokeStyle = "rgba(255, 255, 255, 0.9)";
-      ctx.lineWidth = 1.5;
-      ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(vc.x, vc.y, r, 0, Math.PI * 2);
+        ctx.strokeStyle = "rgba(100, 180, 255, 0.5)";
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([6, 4]);
+        ctx.stroke();
+        ctx.setLineDash([]);
 
-      const ch = 12;
-      ctx.beginPath();
-      ctx.moveTo(vortexCenter.x - ch, vortexCenter.y);
-      ctx.lineTo(vortexCenter.x + ch, vortexCenter.y);
-      ctx.moveTo(vortexCenter.x, vortexCenter.y - ch);
-      ctx.lineTo(vortexCenter.x, vortexCenter.y + ch);
-      ctx.strokeStyle = "rgba(100, 180, 255, 0.6)";
-      ctx.lineWidth = 1;
-      ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(vc.x, vc.y, 6, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(100, 180, 255, 0.8)";
+        ctx.fill();
+        ctx.strokeStyle = "rgba(255, 255, 255, 0.9)";
+        ctx.lineWidth = 1.5;
+        ctx.stroke();
+
+        const ch = 12;
+        ctx.beginPath();
+        ctx.moveTo(vc.x - ch, vc.y);
+        ctx.lineTo(vc.x + ch, vc.y);
+        ctx.moveTo(vc.x, vc.y - ch);
+        ctx.lineTo(vc.x, vc.y + ch);
+        ctx.strokeStyle = "rgba(100, 180, 255, 0.6)";
+        ctx.lineWidth = 1;
+        ctx.stroke();
+
+        ctx.fillStyle = "rgba(100, 180, 255, 0.9)";
+        ctx.font = "bold 9px sans-serif";
+        ctx.textAlign = "center";
+        ctx.textBaseline = "bottom";
+        ctx.fillText(`${vi + 1}`, vc.x, vc.y - 8);
+      }
     }
-  }, [blurPoints, vortexEnabled, vortexCenter, vortexRadius, width, height]);
+  }, [blurPoints, vortexEnabled, vortexCenters, v1Radius, v2Radius, width, height]);
 
   // --- Combined render ---
   const renderAll = useCallback(() => {
     if (!initialized) return;
+    const perAngle = [v1Angle, v2Angle];
+    const perRadius = [v1Radius, v2Radius];
+    const vortices: Vortex[] = vortexCenters.map((c, i) => ({
+      x: c.x,
+      y: c.y,
+      angle: (perAngle[i] ?? perAngle[0]) * DEG_TO_RAD,
+      radius: perRadius[i] ?? perRadius[0],
+    }));
+
     renderPipeline({
       fieldBlurEnabled,
       blurIntensity,
       blurPoints,
       vortexEnabled,
-      vortexCenter,
-      vortexRadius,
-      vortexAngle: vortexAngle * DEG_TO_RAD,
+      vortices,
       ditherEnabled,
       ditherSharpness,
       ditherSeed,
@@ -192,9 +223,11 @@ export function LiquifyDemo() {
     blurIntensity,
     blurPoints,
     vortexEnabled,
-    vortexCenter,
-    vortexRadius,
-    vortexAngle,
+    vortexCenters,
+    v1Angle,
+    v1Radius,
+    v2Angle,
+    v2Radius,
     ditherEnabled,
     ditherSharpness,
     ditherSeed,
@@ -233,21 +266,36 @@ export function LiquifyDemo() {
     [blurPoints],
   );
 
+  const findVortexHandle = useCallback(
+    (px: number, py: number): number => {
+      for (let i = vortexCenters.length - 1; i >= 0; i--) {
+        const dx = px - vortexCenters[i].x;
+        const dy = py - vortexCenters[i].y;
+        if (Math.sqrt(dx * dx + dy * dy) < HIT_THRESHOLD) return i;
+      }
+      return -1;
+    },
+    [vortexCenters],
+  );
+
   const handlePointerDown = useCallback(
     (e: React.PointerEvent<HTMLCanvasElement>) => {
       const pos = getCanvasPos(e);
-      const blurIdx = findBlurHandle(pos.x, pos.y);
 
-      if (blurIdx >= 0) {
-        dragRef.current = { kind: "blur", index: blurIdx };
-      } else {
-        dragRef.current = { kind: "vortex" };
-        setVortexCenter({ x: Math.round(pos.x), y: Math.round(pos.y) });
+      const vortexIdx = findVortexHandle(pos.x, pos.y);
+      if (vortexIdx >= 0) {
+        dragRef.current = { kind: "vortex", index: vortexIdx };
+        overlayRef.current?.setPointerCapture(e.pointerId);
+        return;
       }
 
-      overlayRef.current?.setPointerCapture(e.pointerId);
+      const blurIdx = findBlurHandle(pos.x, pos.y);
+      if (blurIdx >= 0) {
+        dragRef.current = { kind: "blur", index: blurIdx };
+        overlayRef.current?.setPointerCapture(e.pointerId);
+      }
     },
-    [getCanvasPos, findBlurHandle],
+    [getCanvasPos, findVortexHandle, findBlurHandle],
   );
 
   const handlePointerMove = useCallback(
@@ -257,7 +305,13 @@ export function LiquifyDemo() {
       const pos = getCanvasPos(e);
 
       if (drag.kind === "vortex") {
-        setVortexCenter({ x: Math.round(pos.x), y: Math.round(pos.y) });
+        setVortexCenters((prev) =>
+          prev.map((c, i) =>
+            i === drag.index
+              ? { x: Math.round(pos.x), y: Math.round(pos.y) }
+              : c,
+          ),
+        );
       } else if (drag.kind === "blur") {
         setBlurPoints((prev) =>
           prev.map((pt, i) =>

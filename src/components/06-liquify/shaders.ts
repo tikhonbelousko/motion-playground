@@ -54,28 +54,32 @@ out vec4 outColor;
 
 uniform sampler2D u_source;
 uniform vec2 u_resolution;
-uniform vec2 u_vortexCenter;
-uniform float u_vortexRadius;
-uniform float u_vortexAngle;
+uniform int u_vortexCount;
+uniform vec2 u_vortexCenters[8];
+uniform float u_vortexRadii[8];
+uniform float u_vortexAngles[8];
 
 void main() {
-  vec2 pixel = v_uv * u_resolution;
-  vec2 d = pixel - u_vortexCenter;
-  float dist = length(d);
+  vec2 uv = v_uv;
 
-  if (dist < u_vortexRadius) {
-    float t = 1.0 - dist / u_vortexRadius;
-    float theta = u_vortexAngle * t * t;
-    float c = cos(theta);
-    float s = sin(theta);
-    vec2 rotated = vec2(c * d.x - s * d.y, s * d.x + c * d.y);
-    vec2 srcUv = (rotated + u_vortexCenter) / u_resolution;
+  for (int i = 0; i < 8; i++) {
+    if (i >= u_vortexCount) break;
+    vec2 pixel = uv * u_resolution;
+    vec2 d = pixel - u_vortexCenters[i];
+    float dist = length(d);
 
-    if (srcUv.x >= 0.0 && srcUv.x <= 1.0 && srcUv.y >= 0.0 && srcUv.y <= 1.0) {
-      outColor = texture(u_source, srcUv);
-    } else {
-      outColor = texture(u_source, v_uv);
+    if (dist < u_vortexRadii[i]) {
+      float t = 1.0 - dist / u_vortexRadii[i];
+      float theta = u_vortexAngles[i] * t * t;
+      float c = cos(theta);
+      float s = sin(theta);
+      vec2 rotated = vec2(c * d.x - s * d.y, s * d.x + c * d.y);
+      uv = (rotated + u_vortexCenters[i]) / u_resolution;
     }
+  }
+
+  if (uv.x >= 0.0 && uv.x <= 1.0 && uv.y >= 0.0 && uv.y <= 1.0) {
+    outColor = texture(u_source, uv);
   } else {
     outColor = texture(u_source, v_uv);
   }
