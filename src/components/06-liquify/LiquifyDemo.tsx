@@ -103,6 +103,7 @@ export function LiquifyDemo() {
   const mouseInCanvasRef = useRef(false);
   const currentPosRef = useRef({ x: 0, y: 0 });
   const seedRef = useRef(42);
+  const lastSeedTimeRef = useRef(0);
 
   const { render: renderPipeline } = useWebGLPipeline(
     glCanvasRef,
@@ -127,9 +128,10 @@ export function LiquifyDemo() {
 
   const minDim = Math.min(width || 400, height || 400);
 
-  const [{ followMode, fieldBlurEnabled, blurIntensity, vortexEnabled, v1Angle, v1Radius, v2Angle, v2Radius, ditherEnabled, ditherSharpness }] =
+  const [{ followMode, showGuides, fieldBlurEnabled, blurIntensity, vortexEnabled, v1Angle, v1Radius, v2Angle, v2Radius, ditherEnabled, ditherSharpness, ditherRate }] =
     useControls(() => ({
       followMode: { value: true, label: "Follow Mode" },
+      showGuides: { value: true, label: "Show Guides" },
       "Field Blur": folder({
         fieldBlurEnabled: { value: true, label: "Enabled" },
         blurIntensity: { value: 0.4, min: 0, max: 5, step: 0.1, label: "Intensity" },
@@ -160,6 +162,7 @@ export function LiquifyDemo() {
       Dither: folder({
         ditherEnabled: { value: true, label: "Enabled" },
         ditherSharpness: { value: 6, min: 0, max: 100, step: 1, label: "Sharpness" },
+        ditherRate: { value: 10, min: 0, max: 60, step: 1, label: "Seed Rate (/s)" },
         Reseed: button(() => setDitherSeed((Date.now() * Math.random()) | 0)),
       }),
     }), [minDim]);
@@ -208,6 +211,7 @@ export function LiquifyDemo() {
     if (!followMode || !initialized) return;
 
     let running = true;
+    lastSeedTimeRef.current = performance.now();
 
     const loop = () => {
       if (!running) return;
@@ -219,7 +223,14 @@ export function LiquifyDemo() {
       cur.x += (target.x - cur.x) * LERP_SPEED;
       cur.y += (target.y - cur.y) * LERP_SPEED;
 
-      seedRef.current = (seedRef.current + 1) | 0;
+      if (ditherRate > 0) {
+        const now = performance.now();
+        const interval = 1000 / ditherRate;
+        if (now - lastSeedTimeRef.current >= interval) {
+          seedRef.current = (seedRef.current + 1) | 0;
+          lastSeedTimeRef.current = now;
+        }
+      }
 
       const vortices: Vortex[] = [
         { x: cur.x, y: cur.y, angle: v1Angle * DEG_TO_RAD, radius: v1Radius },
@@ -241,11 +252,13 @@ export function LiquifyDemo() {
       if (canvas) {
         const ctx = canvas.getContext("2d")!;
         ctx.clearRect(0, 0, width, height);
-        drawBlurHandles(ctx, blurPoints);
-        if (vortexEnabled) {
-          drawVortexRing(ctx, cur.x, cur.y, v1Radius);
-          if (v2Radius !== v1Radius) {
-            drawVortexRing(ctx, cur.x, cur.y, v2Radius);
+        if (showGuides) {
+          drawBlurHandles(ctx, blurPoints);
+          if (vortexEnabled) {
+            drawVortexRing(ctx, cur.x, cur.y, v1Radius);
+            if (v2Radius !== v1Radius) {
+              drawVortexRing(ctx, cur.x, cur.y, v2Radius);
+            }
           }
         }
       }
@@ -259,10 +272,10 @@ export function LiquifyDemo() {
       cancelAnimationFrame(rafId.current);
     };
   }, [
-    followMode, initialized, width, height,
+    followMode, initialized, width, height, showGuides,
     renderPipeline, fieldBlurEnabled, blurIntensity, blurPoints,
     vortexEnabled, v1Angle, v1Radius, v2Angle, v2Radius,
-    ditherEnabled, ditherSharpness,
+    ditherEnabled, ditherSharpness, ditherRate,
   ]);
 
   const handleFollowMove = useCallback(
@@ -291,6 +304,8 @@ export function LiquifyDemo() {
     const ctx = canvas.getContext("2d")!;
     ctx.clearRect(0, 0, width, height);
 
+    if (!showGuides) return;
+
     drawBlurHandles(ctx, blurPoints);
 
     if (vortexEnabled) {
@@ -300,7 +315,7 @@ export function LiquifyDemo() {
         drawVortexRing(ctx, vc.x, vc.y, perRadius[vi] ?? perRadius[0], `${vi + 1}`);
       }
     }
-  }, [blurPoints, vortexEnabled, vortexCenters, v1Radius, v2Radius, width, height]);
+  }, [showGuides, blurPoints, vortexEnabled, vortexCenters, v1Radius, v2Radius, width, height]);
 
   const renderAll = useCallback(() => {
     if (!initialized || followMode) return;
@@ -486,7 +501,7 @@ export function LiquifyDemo() {
           height={height}
           className="absolute inset-0"
           style={{
-            cursor: followMode ? "none" : "crosshair",
+            cursor: "default",
             width: "100%",
             height: "100%",
           }}
