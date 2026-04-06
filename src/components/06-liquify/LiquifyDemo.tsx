@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useControls, folder, button } from "leva";
+import { useControls, folder, button, Leva } from "leva";
 import { useSourceImage } from "./useSourceImage";
 import { useWebGLPipeline, type BlurPoint, type Vortex } from "./useWebGLPipeline";
 
@@ -128,7 +128,7 @@ export function LiquifyDemo() {
 
   const minDim = Math.min(width || 400, height || 400);
 
-  const [{ followMode, showGuides, fieldBlurEnabled, blurIntensity, vortexEnabled, v1Angle, v1Radius, v2Angle, v2Radius, ditherEnabled, ditherSharpness, ditherRate }] =
+  const [{ followMode, showGuides, fieldBlurEnabled, blurIntensity, vortexEnabled, vortexDecay, v1Angle, v1Radius, v1PulseAngle, v1PulseAngleCycle, v1PulseRadius, v1PulseRadiusCycle, v1OrbitRadius, v1OrbitCycle, v2Angle, v2Radius, ditherEnabled, ditherSharpness, ditherRate }] =
     useControls(() => ({
       followMode: { value: true, label: "Follow Mode" },
       showGuides: { value: true, label: "Show Guides" },
@@ -138,20 +138,27 @@ export function LiquifyDemo() {
       }),
       Vortex: folder({
         vortexEnabled: { value: true, label: "Enabled" },
+        vortexDecay: { value: 3, min: 0.5, max: 10, step: 0.1, label: "Decay" },
         "Vortex 1": folder({
-          v1Angle: { value: 221, min: -720, max: 720, step: 1, label: "Angle (deg)" },
+          v1Angle: { value: 274, min: -720, max: 720, step: 1, label: "Angle (deg)" },
           v1Radius: {
-            value: 169,
+            value: 193,
             min: 20,
             max: minDim || 400,
             step: 1,
             label: "Radius",
           },
+          v1PulseAngle: { value: 39, min: 0, max: 720, step: 1, label: "Pulse Angle (±deg)" },
+          v1PulseAngleCycle: { value: 8.3, min: 0, max: 10, step: 0.1, label: "Pulse Angle Cycle (s)" },
+          v1PulseRadius: { value: 8, min: 0, max: 100, step: 1, label: "Pulse Radius (±px)" },
+          v1PulseRadiusCycle: { value: 8.1, min: 0, max: 10, step: 0.1, label: "Pulse Radius Cycle (s)" },
+          v1OrbitRadius: { value: 12, min: 0, max: 100, step: 1, label: "Orbit Radius (px)" },
+          v1OrbitCycle: { value: 4.8, min: 0, max: 10, step: 0.1, label: "Orbit Cycle (s)" },
         }),
         "Vortex 2": folder({
-          v2Angle: { value: -7, min: -720, max: 720, step: 1, label: "Angle (deg)" },
+          v2Angle: { value: -18, min: -720, max: 720, step: 1, label: "Angle (deg)" },
           v2Radius: {
-            value: Math.min(450, minDim || 400),
+            value: Math.min(393, minDim || 400),
             min: 20,
             max: minDim || 400,
             step: 1,
@@ -232,9 +239,23 @@ export function LiquifyDemo() {
         }
       }
 
+      const t = performance.now() / 1000;
+      const TAU = Math.PI * 2;
+      const orbitPhase = v1OrbitCycle > 0 ? (t / v1OrbitCycle) * TAU : 0;
+      const anglePhase = v1PulseAngleCycle > 0 ? (t / v1PulseAngleCycle) * TAU : 0;
+      const radiusPhase = v1PulseRadiusCycle > 0 ? (t / v1PulseRadiusCycle) * TAU : 0;
+
+      const v1x = cur.x + Math.cos(orbitPhase) * v1OrbitRadius;
+      const v1y = cur.y + Math.sin(orbitPhase) * v1OrbitRadius;
+      const v1AnimAngle = (v1Angle + Math.sin(anglePhase) * v1PulseAngle) * DEG_TO_RAD;
+      const v1AnimRadius = v1Radius + Math.sin(radiusPhase) * v1PulseRadius;
+
+      const v2x = cur.x - Math.cos(orbitPhase) * v1OrbitRadius;
+      const v2y = cur.y - Math.sin(orbitPhase) * v1OrbitRadius;
+
       const vortices: Vortex[] = [
-        { x: cur.x, y: cur.y, angle: v1Angle * DEG_TO_RAD, radius: v1Radius },
-        { x: cur.x, y: cur.y, angle: v2Angle * DEG_TO_RAD, radius: v2Radius },
+        { x: v1x, y: v1y, angle: v1AnimAngle, radius: v1AnimRadius },
+        { x: v2x, y: v2y, angle: v2Angle * DEG_TO_RAD, radius: v2Radius },
       ];
 
       renderPipeline({
@@ -243,6 +264,7 @@ export function LiquifyDemo() {
         blurPoints,
         vortexEnabled,
         vortices,
+        vortexDecay,
         ditherEnabled,
         ditherSharpness,
         ditherSeed: seedRef.current,
@@ -255,10 +277,8 @@ export function LiquifyDemo() {
         if (showGuides) {
           drawBlurHandles(ctx, blurPoints);
           if (vortexEnabled) {
-            drawVortexRing(ctx, cur.x, cur.y, v1Radius);
-            if (v2Radius !== v1Radius) {
-              drawVortexRing(ctx, cur.x, cur.y, v2Radius);
-            }
+            drawVortexRing(ctx, v1x, v1y, v1AnimRadius);
+            drawVortexRing(ctx, v2x, v2y, v2Radius);
           }
         }
       }
@@ -274,7 +294,12 @@ export function LiquifyDemo() {
   }, [
     followMode, initialized, width, height, showGuides,
     renderPipeline, fieldBlurEnabled, blurIntensity, blurPoints,
-    vortexEnabled, v1Angle, v1Radius, v2Angle, v2Radius,
+    vortexEnabled, vortexDecay,
+    v1Angle, v1Radius,
+    v1PulseAngle, v1PulseAngleCycle,
+    v1PulseRadius, v1PulseRadiusCycle,
+    v1OrbitRadius, v1OrbitCycle,
+    v2Angle, v2Radius,
     ditherEnabled, ditherSharpness, ditherRate,
   ]);
 
@@ -334,6 +359,7 @@ export function LiquifyDemo() {
       blurPoints,
       vortexEnabled,
       vortices,
+      vortexDecay,
       ditherEnabled,
       ditherSharpness,
       ditherSeed,
@@ -342,7 +368,7 @@ export function LiquifyDemo() {
   }, [
     initialized, followMode,
     renderPipeline, fieldBlurEnabled, blurIntensity, blurPoints,
-    vortexEnabled, vortexCenters, v1Angle, v1Radius, v2Angle, v2Radius,
+    vortexEnabled, vortexDecay, vortexCenters, v1Angle, v1Radius, v2Angle, v2Radius,
     ditherEnabled, ditherSharpness, ditherSeed, drawOverlay,
   ]);
 
@@ -488,6 +514,7 @@ export function LiquifyDemo() {
 
   return (
     <div className="flex h-screen w-screen items-center justify-center bg-white">
+      <Leva theme={{ sizes: { rootWidth: "420px" } }} />
       <div className="relative">
         <canvas
           ref={glCanvasRef}

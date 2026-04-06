@@ -27,6 +27,7 @@ export interface PipelineParams {
   blurPoints: BlurPoint[];
   vortexEnabled: boolean;
   vortices: Vortex[];
+  vortexDecay: number;
   ditherEnabled: boolean;
   ditherSharpness: number;
   ditherSeed: number;
@@ -184,6 +185,7 @@ export function useWebGLPipeline(
             u_vortexCenters: centers,
             u_vortexRadii: radii,
             u_vortexAngles: angles,
+            u_vortexDecay: params.vortexDecay,
           },
         });
       }

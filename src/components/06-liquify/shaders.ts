@@ -58,6 +58,7 @@ uniform int u_vortexCount;
 uniform vec2 u_vortexCenters[8];
 uniform float u_vortexRadii[8];
 uniform float u_vortexAngles[8];
+uniform float u_vortexDecay;
 
 void main() {
   vec2 uv = v_uv;
@@ -70,7 +71,7 @@ void main() {
 
     if (dist < u_vortexRadii[i]) {
       float t = 1.0 - dist / u_vortexRadii[i];
-      float theta = u_vortexAngles[i] * t * t;
+      float theta = u_vortexAngles[i] * pow(t, u_vortexDecay);
       float c = cos(theta);
       float s = sin(theta);
       vec2 rotated = vec2(c * d.x - s * d.y, s * d.x + c * d.y);
