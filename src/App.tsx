@@ -5,6 +5,7 @@ import { InkbleedDemo } from "./components/03-inkbleed/InkbleedDemo";
 import { MorphingTextDemo } from "./components/04-morphing-text/MorphingTextDemo";
 import { StaggeredRevealDemo } from "./components/05-staggered-reveal/StaggeredRevealDemo";
 import { LiquifyDemo } from "./components/06-liquify/LiquifyDemo";
+import { TypingDemo } from "./components/07-typing/TypingDemo";
 
 const demos = [
   {
@@ -32,6 +33,11 @@ const demos = [
     id: "liquify",
     name: "Liquify",
     component: LiquifyDemo,
+  },
+  {
+    id: "typing",
+    name: "Typing Explosion",
+    component: TypingDemo,
   },
 ];
 

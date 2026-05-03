@@ -1,7 +1,12 @@
 @import "tailwindcss";
 
 @layer base {
+  html {
+    background: #f4f1e8;
+  }
+
   body {
     @apply antialiased;
+    background: #f4f1e8;
   }
 }
