@@ -20,6 +20,7 @@ type TrailParticle = {
   spin: number;
   sizeMix: number;
   strokeDistance: number;
+  taperOverride: number | null;
   age: number;
   life: number;
 };
@@ -112,11 +113,9 @@ function TrailImage({
   const opacity = opacityPeak * plateauFade(progress, 0.12);
   const sizeMin = Math.min(minSize, maxSize);
   const sizeMax = Math.max(minSize, maxSize);
-  const strokeTaper = getStrokeTaper(
-    particle.strokeDistance,
-    currentStrokeDistance,
-    taperLength,
-  );
+  const strokeTaper =
+    particle.taperOverride ??
+    getStrokeTaper(particle.strokeDistance, currentStrokeDistance, taperLength);
   const taperEndMinSize = TAPER_END_MIN_SIZE * taperEndScale;
   const taperEndMaxSize = TAPER_END_MAX_SIZE * taperEndScale;
   const taperedSize = lerp(
@@ -206,8 +205,31 @@ export function TrailDemo() {
       drift: { value: 26, min: 0, max: 260, step: 1, label: "Drift" },
     }));
 
+  const [{
+    explodeCount,
+    explodeForce,
+    explodeRadius,
+    blastForce,
+    blastRadius,
+  }] = useControls(
+    "Click Explosion",
+    () => ({
+      explodeCount: { value: 25, min: 0, max: 80, step: 1, label: "Count" },
+      explodeForce: { value: 290, min: 0, max: 1600, step: 10, label: "Force" },
+      explodeRadius: { value: 29, min: 0, max: 140, step: 1, label: "Radius" },
+      blastForce: { value: 620, min: 0, max: 1200, step: 10, label: "Blast Force" },
+      blastRadius: { value: 600, min: 0, max: 600, step: 5, label: "Blast Radius" },
+    }),
+  );
+
   const addParticle = useCallback(
-    (x: number, y: number, radius: number, strokeDistance: number) => {
+    (
+      x: number,
+      y: number,
+      radius: number,
+      strokeDistance: number,
+      options: { taperOverride?: number; vx?: number; vy?: number } = {},
+    ) => {
       const offsetAngle = randomBetween(0, Math.PI * 2);
       const offsetDistance = getBiasedOffsetDistance(radius, spreadBias);
       const driftAngle = randomBetween(0, Math.PI * 2);
@@ -218,13 +240,14 @@ export function TrailDemo() {
         src: getRandomAsset(),
         x: x + Math.cos(offsetAngle) * offsetDistance,
         y: y + Math.sin(offsetAngle) * offsetDistance,
-        vx: Math.cos(driftAngle) * driftSpeed,
-        vy: Math.sin(driftAngle) * driftSpeed,
+        vx: options.vx ?? Math.cos(driftAngle) * driftSpeed,
+        vy: options.vy ?? Math.sin(driftAngle) * driftSpeed,
         rotation: randomBetween(-12, 12),
         rotateIn: randomBetween(-rotationRange, rotationRange),
         spin: randomBetween(-spinRange, spinRange),
         sizeMix: Math.random(),
         strokeDistance,
+        taperOverride: options.taperOverride ?? null,
         age: 0,
         life,
       };
@@ -294,6 +317,53 @@ export function TrailDemo() {
     ],
   );
 
+  const explodeAtPoint = useCallback(
+    (point: Point) => {
+      const nextParticles = Array.from({ length: explodeCount }, () => {
+        const angle = randomBetween(0, Math.PI * 2);
+        const speed = explodeForce * randomBetween(0.45, 1.15);
+
+        return addParticle(point.x, point.y, explodeRadius, strokeDistanceRef.current, {
+          taperOverride: 1,
+          vx: Math.cos(angle) * speed,
+          vy: Math.sin(angle) * speed,
+        });
+      });
+      const pushedParticles = particlesRef.current.map((particle) => {
+        if (blastForce <= 0 || blastRadius <= 0) return particle;
+
+        const dx = particle.x - point.x;
+        const dy = particle.y - point.y;
+        const distance = Math.hypot(dx, dy);
+
+        if (distance > blastRadius) return particle;
+
+        const angle =
+          distance > 0.001 ? Math.atan2(dy, dx) : randomBetween(0, Math.PI * 2);
+        const falloff = Math.pow(1 - distance / blastRadius, 2);
+        const force = blastForce * falloff * randomBetween(0.75, 1.15);
+
+        return {
+          ...particle,
+          vx: particle.vx + Math.cos(angle) * force,
+          vy: particle.vy + Math.sin(angle) * force,
+        };
+      });
+
+      particlesRef.current = [...pushedParticles, ...nextParticles].slice(-maxImages);
+      setParticles(particlesRef.current);
+    },
+    [
+      addParticle,
+      blastForce,
+      blastRadius,
+      explodeCount,
+      explodeForce,
+      explodeRadius,
+      maxImages,
+    ],
+  );
+
   const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
     const point = { x: event.clientX, y: event.clientY, time: performance.now() };
     const lastPoint = lastPointRef.current;
@@ -303,6 +373,14 @@ export function TrailDemo() {
     }
 
     lastPointRef.current = point;
+  };
+
+  const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>) => {
+    explodeAtPoint({
+      x: event.clientX,
+      y: event.clientY,
+      time: performance.now(),
+    });
   };
 
   const resetPointer = () => {
@@ -341,9 +419,10 @@ export function TrailDemo() {
     <>
       <Leva collapsed={false} />
       <div
-        className="relative h-screen w-screen overflow-hidden bg-[#f4f1e8] text-[#221f1a]"
+        className="relative h-screen w-screen overflow-hidden bg-[#f4f1e8] text-[#221f1a] select-none"
         onPointerEnter={resetPointer}
         onPointerLeave={resetPointer}
+        onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
       >
         <div className="pointer-events-none absolute inset-0 flex items-end justify-center p-6 text-center">
