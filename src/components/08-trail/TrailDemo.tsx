@@ -18,7 +18,8 @@ type TrailParticle = {
   rotation: number;
   rotateIn: number;
   spin: number;
-  size: number;
+  sizeMix: number;
+  strokeDistance: number;
   age: number;
   life: number;
 };
@@ -30,6 +31,8 @@ const assetModules = import.meta.glob("./assets/*.png", {
 });
 
 const ASSET_URLS = Object.values(assetModules) as string[];
+const TAPER_END_MIN_SIZE = 4;
+const TAPER_END_MAX_SIZE = 10;
 
 function clamp(value: number, min: number, max: number) {
   return Math.min(max, Math.max(min, value));
@@ -54,6 +57,30 @@ function plateauFade(progress: number, edgeSize: number) {
   return Math.min(fadeIn, fadeOut);
 }
 
+function getStrokeTaper(
+  particleDistance: number,
+  currentStrokeDistance: number,
+  taperLength: number,
+) {
+  if (currentStrokeDistance <= 0) return 1;
+
+  const safeTaperLength = Math.max(taperLength, 1);
+  const startTaper = clamp(particleDistance / safeTaperLength, 0, 1);
+  const headTaper = clamp(
+    (currentStrokeDistance - particleDistance) / safeTaperLength,
+    0,
+    1,
+  );
+
+  return Math.min(startTaper, headTaper);
+}
+
+function getBiasedOffsetDistance(radius: number, spreadBias: number) {
+  const exponent = 0.5 * Math.pow(4, -spreadBias);
+
+  return Math.pow(Math.random(), exponent) * radius;
+}
+
 function getRandomAsset() {
   return ASSET_URLS[Math.floor(Math.random() * ASSET_URLS.length)];
 }
@@ -63,16 +90,40 @@ function TrailImage({
   startScale,
   peakScale,
   opacityPeak,
+  minSize,
+  maxSize,
+  currentStrokeDistance,
+  taperLength,
+  taperEndScale,
 }: {
   particle: TrailParticle;
   startScale: number;
   peakScale: number;
   opacityPeak: number;
+  minSize: number;
+  maxSize: number;
+  currentStrokeDistance: number;
+  taperLength: number;
+  taperEndScale: number;
 }) {
   const progress = clamp(particle.age / particle.life, 0, 1);
   const bloom = Math.sin(progress * Math.PI);
   const scale = lerp(startScale, peakScale, bloom);
   const opacity = opacityPeak * plateauFade(progress, 0.12);
+  const sizeMin = Math.min(minSize, maxSize);
+  const sizeMax = Math.max(minSize, maxSize);
+  const strokeTaper = getStrokeTaper(
+    particle.strokeDistance,
+    currentStrokeDistance,
+    taperLength,
+  );
+  const taperEndMinSize = TAPER_END_MIN_SIZE * taperEndScale;
+  const taperEndMaxSize = TAPER_END_MAX_SIZE * taperEndScale;
+  const taperedSize = lerp(
+    lerp(taperEndMinSize, taperEndMaxSize, particle.sizeMix),
+    lerp(sizeMin, sizeMax, particle.sizeMix),
+    strokeTaper,
+  );
   const rotateInProgress = clamp(progress * 2, 0, 1);
   const rotation =
     particle.rotation +
@@ -85,8 +136,8 @@ function TrailImage({
       alt=""
       className="pointer-events-none fixed left-0 top-0 z-20 select-none object-contain"
       style={{
-        width: particle.size,
-        height: particle.size,
+        width: taperedSize,
+        height: taperedSize,
         opacity,
         transform: `translate3d(${particle.x}px, ${particle.y}px, 0) translate(-50%, -50%) rotate(${rotation}deg) scale(${scale})`,
       }}
@@ -98,8 +149,10 @@ export function TrailDemo() {
   const particlesRef = useRef<TrailParticle[]>([]);
   const lastPointRef = useRef<Point | null>(null);
   const lastFrameRef = useRef<number | null>(null);
+  const strokeDistanceRef = useRef(0);
   const idRef = useRef(0);
   const [particles, setParticles] = useState<TrailParticle[]>([]);
+  const [currentStrokeDistance, setCurrentStrokeDistance] = useState(0);
 
   const [{
     spacing,
@@ -107,13 +160,15 @@ export function TrailDemo() {
     minThickness,
     maxThickness,
     speedForMaxThickness,
+    spreadBias,
     taperStrength,
+    taperLength,
     maxStampsPerMove,
   }] = useControls("Brush", () => ({
-    spacing: { value: 20, min: 4, max: 80, step: 1, label: "Spacing" },
+    spacing: { value: 26, min: 4, max: 80, step: 1, label: "Spacing" },
     imagesPerStamp: { value: 2, min: 1, max: 8, step: 1, label: "Images / Stamp" },
-    minThickness: { value: 18, min: 0, max: 120, step: 1, label: "Min Thickness" },
-    maxThickness: { value: 110, min: 8, max: 360, step: 1, label: "Max Thickness" },
+    minThickness: { value: 10, min: 0, max: 120, step: 1, label: "Min Thickness" },
+    maxThickness: { value: 122, min: 8, max: 360, step: 1, label: "Max Thickness" },
     speedForMaxThickness: {
       value: 1400,
       min: 120,
@@ -121,15 +176,24 @@ export function TrailDemo() {
       step: 20,
       label: "Speed For Max",
     },
-    taperStrength: { value: 0.72, min: 0, max: 1, step: 0.01, label: "Taper" },
-    maxStampsPerMove: { value: 18, min: 1, max: 48, step: 1, label: "Max Stamps" },
+    spreadBias: { value: 0, min: -1, max: 1, step: 0.01, label: "Spread Bias" },
+    taperStrength: { value: 0.97, min: 0, max: 1, step: 0.01, label: "Taper" },
+    taperLength: { value: 150, min: 20, max: 600, step: 5, label: "Taper Length" },
+    maxStampsPerMove: { value: 26, min: 1, max: 48, step: 1, label: "Max Stamps" },
   }));
 
-  const [{ minSize, maxSize, life, maxImages }] = useControls("Images", () => ({
-    minSize: { value: 44, min: 12, max: 160, step: 1, label: "Min Size" },
-    maxSize: { value: 104, min: 12, max: 260, step: 1, label: "Max Size" },
-    life: { value: 0.78, min: 0.2, max: 3, step: 0.02, label: "Life (s)" },
-    maxImages: { value: 520, min: 50, max: 1400, step: 10, label: "Max Images" },
+  const [{ minSize, maxSize, taperEndScale, life, maxImages }] = useControls("Images", () => ({
+    minSize: { value: 48, min: 12, max: 160, step: 1, label: "Min Size" },
+    maxSize: { value: 172, min: 12, max: 260, step: 1, label: "Max Size" },
+    taperEndScale: {
+      value: 0.25,
+      min: 0.25,
+      max: 8,
+      step: 0.05,
+      label: "Taper End Scale",
+    },
+    life: { value: 0.54, min: 0.2, max: 3, step: 0.02, label: "Life (s)" },
+    maxImages: { value: 610, min: 50, max: 1400, step: 10, label: "Max Images" },
   }));
 
   const [{ startScale, peakScale, opacityPeak, rotationRange, spinRange, drift }] =
@@ -143,14 +207,11 @@ export function TrailDemo() {
     }));
 
   const addParticle = useCallback(
-    (x: number, y: number, radius: number, taper: number) => {
+    (x: number, y: number, radius: number, strokeDistance: number) => {
       const offsetAngle = randomBetween(0, Math.PI * 2);
-      const offsetDistance = Math.sqrt(Math.random()) * radius;
+      const offsetDistance = getBiasedOffsetDistance(radius, spreadBias);
       const driftAngle = randomBetween(0, Math.PI * 2);
       const driftSpeed = randomBetween(0, drift);
-      const sizeMin = Math.min(minSize, maxSize);
-      const sizeMax = Math.max(minSize, maxSize);
-      const taperedSize = randomBetween(sizeMin, sizeMax) * lerp(0.58, 1, taper);
 
       return {
         id: idRef.current++,
@@ -162,12 +223,13 @@ export function TrailDemo() {
         rotation: randomBetween(-12, 12),
         rotateIn: randomBetween(-rotationRange, rotationRange),
         spin: randomBetween(-spinRange, spinRange),
-        size: taperedSize,
+        sizeMix: Math.random(),
+        strokeDistance,
         age: 0,
         life,
       };
     },
-    [drift, life, maxSize, minSize, rotationRange, spinRange],
+    [drift, life, rotationRange, spinRange, spreadBias],
   );
 
   const emitBetweenPoints = useCallback(
@@ -187,16 +249,20 @@ export function TrailDemo() {
         1,
         maxStampsPerMove,
       );
+      const strokeStartDistance = strokeDistanceRef.current;
       const nextParticles: TrailParticle[] = [];
 
       for (let stampIndex = 0; stampIndex < stampCount; stampIndex++) {
-        const progress = (stampIndex + 1) / stampCount;
+        const progress =
+          stampCount === 1 ? 0.5 : stampIndex / Math.max(stampCount - 1, 1);
+        const sizeTaper = stampCount === 1 ? 1 : Math.sin(progress * Math.PI);
         const segmentTaper =
           stampCount === 1
             ? 1
-            : lerp(1 - taperStrength, 1, Math.sin(progress * Math.PI));
+            : lerp(1 - taperStrength, 1, sizeTaper);
         const stampX = lerp(from.x, to.x, progress);
         const stampY = lerp(from.y, to.y, progress);
+        const stampStrokeDistance = strokeStartDistance + distance * progress;
         const radius = thickness * segmentTaper;
         const imageCount = Math.max(
           1,
@@ -204,10 +270,12 @@ export function TrailDemo() {
         );
 
         for (let imageIndex = 0; imageIndex < imageCount; imageIndex++) {
-          nextParticles.push(addParticle(stampX, stampY, radius, segmentTaper));
+          nextParticles.push(addParticle(stampX, stampY, radius, stampStrokeDistance));
         }
       }
 
+      strokeDistanceRef.current += distance;
+      setCurrentStrokeDistance(strokeDistanceRef.current);
       particlesRef.current = [...particlesRef.current, ...nextParticles].slice(
         -maxImages,
       );
@@ -239,6 +307,8 @@ export function TrailDemo() {
 
   const resetPointer = () => {
     lastPointRef.current = null;
+    strokeDistanceRef.current = 0;
+    setCurrentStrokeDistance(0);
   };
 
   useEffect(() => {
@@ -289,6 +359,11 @@ export function TrailDemo() {
               startScale={startScale}
               peakScale={peakScale}
               opacityPeak={opacityPeak}
+              minSize={minSize}
+              maxSize={maxSize}
+              currentStrokeDistance={currentStrokeDistance}
+              taperLength={taperLength}
+              taperEndScale={taperEndScale}
             />
           ))}
         </div>
