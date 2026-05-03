@@ -6,6 +6,7 @@ import { MorphingTextDemo } from "./components/04-morphing-text/MorphingTextDemo
 import { StaggeredRevealDemo } from "./components/05-staggered-reveal/StaggeredRevealDemo";
 import { LiquifyDemo } from "./components/06-liquify/LiquifyDemo";
 import { TypingDemo } from "./components/07-typing/TypingDemo";
+import { TrailDemo } from "./components/08-trail/TrailDemo";
 
 const demos = [
   {
@@ -38,6 +39,11 @@ const demos = [
     id: "typing",
     name: "Typing Explosion",
     component: TypingDemo,
+  },
+  {
+    id: "trail",
+    name: "Image Trail",
+    component: TrailDemo,
   },
 ];
 
